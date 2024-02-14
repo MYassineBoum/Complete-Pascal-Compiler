@@ -365,10 +365,10 @@ void Sym_Suiv()
             SYM_COUR.CODE = ERREUR_TOKEN;
             Lire_Car();
         }
-        strcpy(SYM_COUR.NOM , Car_Cour);
+        strcpy(SYM_COUR.NOM , &Car_Cour);
     }
 
-    printf("Symbol: %s\n", SYM_COUR.NOM);
+    //printf("Symbol: %s\n", SYM_COUR.NOM);
 }
 
 void Lire_Car()
@@ -481,9 +481,9 @@ void INSTS()
         if (SYM_COUR.CODE == END_TOKEN)
         {
             Sym_Suiv();
-            printf("rani wslt lhna");
-            printf("Current Token: %d\n", SYM_COUR.CODE);
-            printf("Current Lexeme: %s\n", SYM_COUR.NOM);
+            printf("Le programme est correcte!\n");
+            //printf("Current Token: %d\n", SYM_COUR.CODE);
+            //printf("Current Lexeme: %s\n", SYM_COUR.NOM);
         }
         else
         {
@@ -766,9 +766,9 @@ int main()
 
     PROGRAM();
 
-    printf("Execution du programme faite.\n");
+    //printf("Execution du programme faite.\n");
 
-    if (SYM_COUR.CODE == EOF_TOKEN)
+    /*if (SYM_COUR.CODE == EOF_TOKEN)
     {
         printf("Le programme est correcte!\n");
     }
@@ -778,8 +778,7 @@ int main()
         printf("Current Token: %d\n", SYM_COUR.CODE);
         printf("Current Lexeme: %s\n", SYM_COUR.NOM);
         Sym_Suiv(); // Move this line inside the else block
-    }
-
+    }*/
     fclose(fichier);
 
     return 0;
