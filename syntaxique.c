@@ -401,7 +401,6 @@ void PROGRAM()
 {
     Test_Symbole(PROGRAM_TOKEN, PROGRAM_ERR);
     Test_Symbole(ID_TOKEN, ID_ERR);
-    NbrIDFS++;
     Test_Symbole(PV_TOKEN, PV_ERR);
     BLOCK();
     Test_Symbole(PT_TOKEN, PT_ERR);
