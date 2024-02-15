@@ -30,7 +30,7 @@ void regle3();
 void regle4();
 void regle5();
 
-int i = 0;
+int k = 0;
 int Y = 0;
 
 void table_id() {
@@ -45,9 +45,9 @@ void table_id() {
 void store_prog() {
 	while((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
-			strcpy((TAB_IDFS+i)->NOM, SYM_COUR.NOM);
-			(TAB_IDFS+i)->TIDF = TPROG;
-            i++;
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TPROG;
+            k++;
 		}
 		Sym_Suiv();
 	}
@@ -58,14 +58,14 @@ void store_prog() {
 void store_const() {
 	while((SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
-			strcpy((TAB_IDFS+i)->NOM, SYM_COUR.NOM);
-			(TAB_IDFS+i)->TIDF = TCONST;
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TCONST;
 			Sym_Suiv();
 			if(SYM_COUR.CODE == EG_TOKEN) {
 				Sym_Suiv();
-			    (TAB_IDFS+i)->value = SYM_COUR.val;
+			    (TAB_IDFS+k)->value = SYM_COUR.val;
 		    }
-            i++;
+            k++;
 		}
 		Sym_Suiv();
 		Sym_Suiv();
@@ -78,9 +78,9 @@ void store_var() {
 	while((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
             regle2();
-			strcpy((TAB_IDFS+i)->NOM, SYM_COUR.NOM);
-			(TAB_IDFS+i)->TIDF = TVAR;
-            i++;
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TVAR;
+            k++;
 		}
 		Sym_Suiv();
 	}
@@ -107,7 +107,7 @@ void affich() {
 
 void regle1() {
     printf("%s en regle1\n", SYM_COUR.NOM);
-	while(SYM_COUR.CODE != EOF_TOKEN) {
+	while(SYM_COUR.CODE != BEGIN_TOKEN) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
 			printf("%s before check\n", SYM_COUR.NOM);
 			check();
@@ -119,7 +119,7 @@ void regle1() {
 void check() {
 	int r = 0; 
 	int i;
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < k; ++i) {
 		if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
 			r = 1;
 		}
@@ -143,7 +143,7 @@ void check() {
 void regle2() {
 	int r = 0;
 	int i;
-	for (i = 0; i < 4; ++i) {
+	for (i = 0; i < k; ++i) {
 		if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
 			r = 1;
 		}
@@ -164,7 +164,7 @@ void regle3() {
 		if(SYM_COUR.CODE == ID_TOKEN) {    
             int r = 0; 
             int i;
-            for (i = 0; i < 4; ++i) {
+            for (i = 0; i < k; ++i) {
                 if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                     r = 1;
                 }
@@ -185,7 +185,7 @@ void regle4() {
     while(SYM_COUR.CODE != PT_TOKEN) {
         if(SYM_COUR.CODE == ID_TOKEN) {
         	int i;
-            for (i = 0; i < 4; ++i) {
+            for (i = 0; i < k; ++i) {
                 if((TAB_IDFS+i)->TIDF == 1) {
                     Sym_Suiv();
                     if(SYM_COUR.CODE == EG_TOKEN) {
@@ -204,7 +204,7 @@ void regle4() {
             Sym_Suiv();
             if(SYM_COUR.CODE == ID_TOKEN) {
             	int i;
-                for (i = 0; i < 4; ++i) {
+                for (i = 0; i < k; ++i) {
                     if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                         if((TAB_IDFS+i)->TIDF == 1) {
                             printf("%s ----> Erreur, une constante ne peut pas changer de valeur a partir de READ!\n", SYM_COUR.NOM);
@@ -224,7 +224,7 @@ void regle5() {
 	while(SYM_COUR.CODE != PT_TOKEN) {
         if(SYM_COUR.CODE == ID_TOKEN) {
         	int i;
-            for (i = 0; i < 4; ++i) {
+            for (i = 0; i < k; ++i) {
                 if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                     if((TAB_IDFS+i)->TIDF == 0) {
                         printf("%s ----> Nom de	programme non autorise!\n", SYM_COUR.NOM);
