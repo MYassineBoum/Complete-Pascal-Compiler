@@ -1,8 +1,7 @@
-program test11;
-const toto=21;
-var x, y;
-Begin
-    x:=toto;
-    read(y);
-    write(x)
+program test;
+const tata=12;
+var x;
+begin
+   x:=10;
+   x:=x+tata;
 end.

@@ -36,15 +36,8 @@ typedef enum
     NUM_TOKEN,
     ERREUR_TOKEN,
     EOF_TOKEN,
-    EG_TOKEN,
-    REPEAT_TOKEN,
-    UNTIL_TOKEN,
-    FOR_TOKEN,
-    ELSE_TOKEN,
-    CASE_TOKEN,
-    OF_TOKEN,
-    INTO_TOKEN,
-    DOWNTO_TOKEN,
+    EG_TOKEN,REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN,
+    INTO_TOKEN,DOWNTO_TOKEN,
     DDOT_TOKEN
 } CODES_LEX;
 
@@ -84,16 +77,8 @@ typedef enum
     EOF_ERR,
     EG_ERR,
     CONST_VAR_BEGIN_ERR,
-    VAR_BEGIN_ERR,
-    REPEAT_ERR,
-    UNTIL_ERR,
-    FOR_ERR,
-    ELSE_ERR,
-    CASE_ERR,
-    OF_ERR,
-    INTO_ERR,
-    DOWNTO_ERR,
-    DDOT_ERR
+    VAR_BEGIN_ERR,REPEAT_ERR,UNTIL_ERR,FOR_ERR,ELSE_ERR,CASE_ERR,OF_ERR,
+    INTO_ERR,DOWNTO_ERR,DDOT_ERR
 } CODES_ERR;
 
 typedef struct
@@ -103,10 +88,10 @@ typedef struct
     int val;
 } TSym_Cour;
 
-// TSym_Cour head;
+//TSym_Cour head;
 TSym_Cour SYM_COUR;
 
-FILE *fichier;
+FILE * fichier;
 
 char Car_Cour; // caractère courant
 
@@ -371,10 +356,10 @@ void Sym_Suiv()
             SYM_COUR.CODE = ERREUR_TOKEN;
             Lire_Car();
         }
-        strcpy(SYM_COUR.NOM, &Car_Cour);
+        strcpy(SYM_COUR.NOM , &Car_Cour);
     }
 
-    // printf("Symbol: %s\n", SYM_COUR.NOM);
+    //printf("Symbol: %s\n", SYM_COUR.NOM);
 }
 
 void Lire_Car()
@@ -382,270 +367,207 @@ void Lire_Car()
     Car_Cour = fgetc(fichier);
 }
 
-typedef enum
-{
+typedef enum {
     TPROG,
     TCONST,
     TVAR
 } TSYM;
 
-typedef struct
-{
+typedef struct {
     TSYM TIDF;
     char NOM[20];
     int value;
 } T_TAB_IDF;
 
-T_TAB_IDF *TAB_IDFS;
+T_TAB_IDF * TAB_IDFS;
 
 int k = 0;
 int Y = 0;
 
-void table_id()
-{
-    switch (SYM_COUR.CODE)
-    {
-    case PROGRAM_TOKEN:
-        Sym_Suiv();
-        store_prog();
-        break;
-    case CONST_TOKEN:
-        Sym_Suiv();
-        store_const();
-        break;
-    case VAR_TOKEN:
-        Sym_Suiv();
-        store_var();
-        break;
-    default:;
-        break;
+void table_id() {
+    switch(SYM_COUR.CODE) {
+        case PROGRAM_TOKEN : Sym_Suiv(); store_prog(); break;
+        case CONST_TOKEN : Sym_Suiv(); store_const(); break;
+        case VAR_TOKEN : Sym_Suiv(); store_var(); break;
+        default : ; break;
     }
 }
 
-void store_prog()
-{
-    while ((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN))
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            strcpy((TAB_IDFS + k)->NOM, SYM_COUR.NOM);
-            (TAB_IDFS + k)->TIDF = TPROG;
+void store_prog() {
+	while((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
+		if(SYM_COUR.CODE == ID_TOKEN) {
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TPROG;
             k++;
-        }
-        Sym_Suiv();
-    }
-    // printf("tprog %s \n", SYM_COUR.NOM);
-    table_id();
+		}
+		Sym_Suiv();
+	}
+    //printf("tprog %s \n", SYM_COUR.NOM);
+	table_id();
 }
 
-void store_const()
-{
-    while ((SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN))
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            strcpy((TAB_IDFS + k)->NOM, SYM_COUR.NOM);
-            (TAB_IDFS + k)->TIDF = TCONST;
-            Sym_Suiv();
-            if (SYM_COUR.CODE == EG_TOKEN)
-            {
-                Sym_Suiv();
-                (TAB_IDFS + k)->value = SYM_COUR.val;
-            }
+void store_const() {
+	while((SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != VAR_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
+		if(SYM_COUR.CODE == ID_TOKEN) {
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TCONST;
+			Sym_Suiv();
+			if(SYM_COUR.CODE == EG_TOKEN) {
+				Sym_Suiv();
+			    (TAB_IDFS+k)->value = SYM_COUR.val;
+		    }
             k++;
-        }
-        Sym_Suiv();
-        Sym_Suiv();
-        // printf("tconst %s \n", SYM_COUR.NOM);
-    }
-    table_id();
+		}
+		Sym_Suiv();
+		Sym_Suiv();
+		//printf("tconst %s \n", SYM_COUR.NOM);
+	}
+	table_id();
 }
 
-void store_var()
-{
-    while ((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN))
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
+void store_var() {
+	while((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
+		if(SYM_COUR.CODE == ID_TOKEN) {
             regle2();
             printf("La regle 2 est verifiee.\n");
-            strcpy((TAB_IDFS + k)->NOM, SYM_COUR.NOM);
-            (TAB_IDFS + k)->TIDF = TVAR;
+			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
+			(TAB_IDFS+k)->TIDF = TVAR;
             k++;
-        }
-        Sym_Suiv();
-    }
-    // printf("tvar %s \n", SYM_COUR.NOM);
-    table_id();
+		}
+		Sym_Suiv();
+	}
+    //printf("tvar %s \n", SYM_COUR.NOM);
+	table_id();
 }
 
-void affich()
-{
-    // Lire_Car();
-    // Sym_Suiv();
-    regle1();
-    printf("La regle 1 est verifiee.\n");
-    regle3();
-    printf("La regle 3 est verifiee.\n");
-    regle4();
-    printf("La regle 4 est verifiee.\n");
-    regle5();
-    printf("La regle 5 est verifiee.\n");
-    if (Y == 0)
-    {
-        printf("La semantique est correcte!\n");
-    }
-    else
-        printf("La semantique est erronee!\n");
+void affich() {
+	//Lire_Car();
+    //Sym_Suiv();
+	regle1();
+	printf("La regle 1 est verifiee.\n");
+	regle3();
+	printf("La regle 3 est verifiee.\n");
+	regle4();
+	printf("La regle 4 est verifiee.\n");
+	regle5();
+	printf("La regle 5 est verifiee.\n");
+	if(Y == 0) {
+		printf("La semantique est correcte!\n");
+	}
+    else printf("La semantique est erronee!\n");	
 }
 
-void regle1()
-{
-    fseek(fichier, 0, SEEK_SET);
-    Lire_Car();
-    Sym_Suiv();
-    // printf("%s en regle1\n", SYM_COUR.NOM);
-    while (SYM_COUR.CODE != BEGIN_TOKEN)
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            // printf("%s before check\n", SYM_COUR.NOM);
-            check();
-        }
-        Sym_Suiv();
-    }
+void regle1() {
+	fseek(fichier, 0, SEEK_SET);
+	Lire_Car();
+	Sym_Suiv();
+    //printf("%s en regle1\n", SYM_COUR.NOM);
+	while(SYM_COUR.CODE != BEGIN_TOKEN) {
+		if(SYM_COUR.CODE == ID_TOKEN) {
+			//printf("%s before check\n", SYM_COUR.NOM);
+			check();
+		}
+		Sym_Suiv();
+	}
 }
 
-void check()
-{
-    int r = 0;
-    int i;
-    for (i = 0; i < k; ++i)
-    {
-        if (strcmp(SYM_COUR.NOM, (TAB_IDFS + i)->NOM) == 0)
-        {
-            r = 1;
-        }
-    }
+void check() {
+	int r = 0; 
+	int i;
+	for (i = 0; i < k; ++i) {
+		if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
+			r = 1;
+		}
+	}
 
-    if (r == 0)
-    {
-        // printf("%s TAB IDF\n", (TAB_IDFS+1)->NOM);
-        printf("%s ----> Erreur declaration hors CONST et VAR 1!\n", SYM_COUR.NOM);
-        Y = 1;
-    }
-    else
-    {
-        // printf("%s GOOD\n", SYM_COUR.NOM);
-        /*printf("%s TAB IDF\n", (TAB_IDFS+0)->NOM);
-        printf("%s TAB IDF\n", (TAB_IDFS+1)->NOM);
-        printf("%s TAB IDF\n", (TAB_IDFS+2)->NOM);
-        printf("%s TAB IDF\n", (TAB_IDFS+3)->NOM);
-        printf("%s TAB IDF\n", (TAB_IDFS+4)->NOM);*/
-    }
+	if(r == 0) {
+		//printf("%s TAB IDF\n", (TAB_IDFS+1)->NOM);
+		printf("%s ----> Erreur declaration hors CONST et VAR 1!\n", SYM_COUR.NOM);
+		Y = 1;
+	} else {
+		//printf("%s GOOD\n", SYM_COUR.NOM);
+		/*printf("%s TAB IDF\n", (TAB_IDFS+0)->NOM);
+		printf("%s TAB IDF\n", (TAB_IDFS+1)->NOM);
+		printf("%s TAB IDF\n", (TAB_IDFS+2)->NOM);
+		printf("%s TAB IDF\n", (TAB_IDFS+3)->NOM);
+		printf("%s TAB IDF\n", (TAB_IDFS+4)->NOM);*/
+	}
+	
 }
 
-void regle2()
-{
-    int r = 0;
-    int i;
-    for (i = 0; i < k; ++i)
-    {
-        if (strcmp(SYM_COUR.NOM, (TAB_IDFS + i)->NOM) == 0)
-        {
-            r = 1;
-        }
-    }
+void regle2() {
+	int r = 0;
+	int i;
+	for (i = 0; i < k; ++i) {
+		if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
+			r = 1;
+		}
+	}
 
-    if (r == 1)
-    {
-        printf("%s ----> Erreur variable deja declaree!\n ", SYM_COUR.NOM);
-        Y = 1;
-    }
-    else
-    {
-        // printf("%s continue\n", SYM_COUR.NOM);
-    }
+	if(r == 1) {
+		printf("%s ----> Erreur variable deja declaree!\n ", SYM_COUR.NOM);
+		Y = 1;
+	} else {
+		//printf("%s continue\n", SYM_COUR.NOM);
+	}
 }
 
-void regle3()
-{
-    fseek(fichier, 0, SEEK_SET);
-    Lire_Car();
-    Sym_Suiv();
-    while (SYM_COUR.CODE != BEGIN_TOKEN)
-        Sym_Suiv();
+void regle3() {
+	fseek(fichier, 0, SEEK_SET);
+	Lire_Car();
+	Sym_Suiv();
+	while(SYM_COUR.CODE != BEGIN_TOKEN) Sym_Suiv();
 
-    while (SYM_COUR.CODE != PT_TOKEN)
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            int r = 0;
+	while(SYM_COUR.CODE != PT_TOKEN) {
+		if(SYM_COUR.CODE == ID_TOKEN) {    
+            int r = 0; 
             int i;
-            for (i = 0; i < k; ++i)
-            {
-                if (strcmp(SYM_COUR.NOM, (TAB_IDFS + i)->NOM) == 0)
-                {
+            for (i = 0; i < k; ++i) {
+                if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                     r = 1;
                 }
             }
 
-            if (r == 0)
-            {
+            if(r == 0) {
                 printf("%s ----> Erreur, variable non declaree!\n", SYM_COUR.NOM);
                 Y = 1;
             }
         }
         Sym_Suiv();
-    }
+	}
 }
 
-void regle4()
-{
-    fseek(fichier, 0, SEEK_SET);
-    Lire_Car();
-    Sym_Suiv();
-    while (SYM_COUR.CODE != BEGIN_TOKEN)
-        Sym_Suiv();
-    while (SYM_COUR.CODE != PT_TOKEN)
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            int i;
-            for (i = 0; i < k; ++i)
-            {
-                if ((TAB_IDFS + i)->TIDF == 1)
-                {
+void regle4() {
+	fseek(fichier, 0, SEEK_SET);
+	Lire_Car();
+	Sym_Suiv();
+    while(SYM_COUR.CODE != BEGIN_TOKEN) Sym_Suiv();
+    while(SYM_COUR.CODE != PT_TOKEN) {
+        if(SYM_COUR.CODE == ID_TOKEN) {
+        	int i;
+            for (i = 0; i < k; ++i) {
+                if((TAB_IDFS+i)->TIDF == 1 && strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                     Sym_Suiv();
-                    if (SYM_COUR.CODE == EG_TOKEN)
-                    {
+                    if(SYM_COUR.CODE == AFF_TOKEN) {
                         Sym_Suiv();
-                        if (SYM_COUR.val != (TAB_IDFS + i)->value)
-                        {
+                        if(SYM_COUR.val != (TAB_IDFS+i)->value) {
                             printf("%s ----> Erreur, une constante ne peut pas changer de valeur dans le programme!\n", SYM_COUR.NOM);
                             Y = 1;
                         }
-                    }
+                    }    
                 }
             }
         }
 
-        if (SYM_COUR.CODE == READ_TOKEN)
-        {
+        if(SYM_COUR.CODE == READ_TOKEN) {
             Sym_Suiv();
             Sym_Suiv();
-            if (SYM_COUR.CODE == ID_TOKEN)
-            {
-                int i;
-                for (i = 0; i < k; ++i)
-                {
-                    if (strcmp(SYM_COUR.NOM, (TAB_IDFS + i)->NOM) == 0)
-                    {
-                        if ((TAB_IDFS + i)->TIDF == 1)
-                        {
-                            printf("%s ----> Erreur, une constante ne peut pas changer de valeur a partir de READ!\n", SYM_COUR.NOM);
-                            Y = 1;
-                        }
+            if(SYM_COUR.CODE == ID_TOKEN) {
+            	int i;
+                for (i = 0; i < k; ++i) {
+                    if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0 && (TAB_IDFS+i)->TIDF == 1) {
+                        printf("%s ----> Erreur, une constante ne peut pas changer de valeur a partir de READ!\n", SYM_COUR.NOM);
+                        Y = 1;	
                     }
                 }
             }
@@ -654,24 +576,17 @@ void regle4()
     }
 }
 
-void regle5()
-{
-    fseek(fichier, 0, SEEK_SET);
-    Lire_Car();
-    Sym_Suiv();
-    while (SYM_COUR.CODE != BEGIN_TOKEN)
-        Sym_Suiv();
-    while (SYM_COUR.CODE != PT_TOKEN)
-    {
-        if (SYM_COUR.CODE == ID_TOKEN)
-        {
-            int i;
-            for (i = 0; i < k; ++i)
-            {
-                if (strcmp(SYM_COUR.NOM, (TAB_IDFS + i)->NOM) == 0)
-                {
-                    if ((TAB_IDFS + i)->TIDF == 0)
-                    {
+void regle5() {
+	fseek(fichier, 0, SEEK_SET);
+	Lire_Car();
+	Sym_Suiv();
+	while(SYM_COUR.CODE != BEGIN_TOKEN) Sym_Suiv();
+	while(SYM_COUR.CODE != PT_TOKEN) {
+        if(SYM_COUR.CODE == ID_TOKEN) {
+        	int i;
+            for (i = 0; i < k; ++i) {
+                if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
+                    if((TAB_IDFS+i)->TIDF == 0) {
                         printf("%s ----> Nom de	programme non autorise!\n", SYM_COUR.NOM);
                         Y = 1;
                     }
@@ -679,8 +594,11 @@ void regle5()
             }
         }
         Sym_Suiv();
-    }
+	}
 }
+
+
+
 
 int main()
 {
