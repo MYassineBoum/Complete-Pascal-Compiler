@@ -401,7 +401,7 @@ void store_prog() {
 		}
 		Sym_Suiv();
 	}
-    printf("tprog %s \n", SYM_COUR.NOM);
+    //printf("tprog %s \n", SYM_COUR.NOM);
 	table_id();
 }
 
@@ -419,7 +419,7 @@ void store_const() {
 		}
 		Sym_Suiv();
 		Sym_Suiv();
-		printf("tconst %s \n", SYM_COUR.NOM);
+		//printf("tconst %s \n", SYM_COUR.NOM);
 	}
 	table_id();
 }
@@ -428,13 +428,14 @@ void store_var() {
 	while((SYM_COUR.CODE != CONST_TOKEN) && (SYM_COUR.CODE != PROGRAM_TOKEN) && (SYM_COUR.CODE != BEGIN_TOKEN)) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
             regle2();
+            printf("La regle 2 est verifiee.\n");
 			strcpy((TAB_IDFS+k)->NOM, SYM_COUR.NOM);
 			(TAB_IDFS+k)->TIDF = TVAR;
             k++;
 		}
 		Sym_Suiv();
 	}
-    printf("tvar %s \n", SYM_COUR.NOM);
+    //printf("tvar %s \n", SYM_COUR.NOM);
 	table_id();
 }
 
@@ -442,13 +443,13 @@ void affich() {
 	//Lire_Car();
     //Sym_Suiv();
 	regle1();
-	printf("regle1\n");
+	printf("La regle 1 est verifiee.\n");
 	regle3();
-	printf("regle3\n");
+	printf("La regle 3 est verifiee.\n");
 	regle4();
-	printf("regle4\n");
+	printf("La regle 4 est verifiee.\n");
 	regle5();
-
+	printf("La regle 5 est verifiee.\n");
 	if(Y == 0) {
 		printf("La semantique est correcte!\n");
 	}
@@ -459,10 +460,10 @@ void regle1() {
 	fseek(fichier, 0, SEEK_SET);
 	Lire_Car();
 	Sym_Suiv();
-    printf("%s en regle1\n", SYM_COUR.NOM);
+    //printf("%s en regle1\n", SYM_COUR.NOM);
 	while(SYM_COUR.CODE != BEGIN_TOKEN) {
 		if(SYM_COUR.CODE == ID_TOKEN) {
-			printf("%s before check\n", SYM_COUR.NOM);
+			//printf("%s before check\n", SYM_COUR.NOM);
 			check();
 		}
 		Sym_Suiv();
@@ -483,7 +484,7 @@ void check() {
 		printf("%s ----> Erreur declaration hors CONST et VAR 1!\n", SYM_COUR.NOM);
 		Y = 1;
 	} else {
-		printf("%s GOOD\n", SYM_COUR.NOM);
+		//printf("%s GOOD\n", SYM_COUR.NOM);
 		/*printf("%s TAB IDF\n", (TAB_IDFS+0)->NOM);
 		printf("%s TAB IDF\n", (TAB_IDFS+1)->NOM);
 		printf("%s TAB IDF\n", (TAB_IDFS+2)->NOM);
@@ -506,7 +507,7 @@ void regle2() {
 		printf("%s ----> Erreur variable deja declaree!\n ", SYM_COUR.NOM);
 		Y = 1;
 	} else {
-		printf("%s continue\n", SYM_COUR.NOM);
+		//printf("%s continue\n", SYM_COUR.NOM);
 	}
 }
 
@@ -527,7 +528,7 @@ void regle3() {
             }
 
             if(r == 0) {
-                printf("%s ----> Erreur variable deja declaree!\n", SYM_COUR.NOM);
+                printf("%s ----> Erreur, variable non declaree!\n", SYM_COUR.NOM);
                 Y = 1;
             }
         }
@@ -608,7 +609,7 @@ int main() {
     // PREMIER_SYM();
     Lire_Car();
     Sym_Suiv();
-    TAB_IDFS = (T_TAB_IDF *)malloc(sizeof(T_TAB_IDF) * 20);
+    TAB_IDFS = (T_TAB_IDF *)malloc(sizeof(T_TAB_IDF) * 100);
     //TAB_IDFS = malloc(sizeof(T_TAB_IDF) * NbrIDFS);
     table_id();
     affich();
