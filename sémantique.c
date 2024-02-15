@@ -545,15 +545,15 @@ void regle4() {
         if(SYM_COUR.CODE == ID_TOKEN) {
         	int i;
             for (i = 0; i < k; ++i) {
-                if((TAB_IDFS+i)->TIDF == 1) {
+                if((TAB_IDFS+i)->TIDF == 1 && strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
                     Sym_Suiv();
-                    if(SYM_COUR.CODE == EG_TOKEN) {
+                    if(SYM_COUR.CODE == AFF_TOKEN) {
                         Sym_Suiv();
                         if(SYM_COUR.val != (TAB_IDFS+i)->value) {
                             printf("%s ----> Erreur, une constante ne peut pas changer de valeur dans le programme!\n", SYM_COUR.NOM);
                             Y = 1;
                         }
-                    }     
+                    }    
                 }
             }
         }
@@ -564,11 +564,9 @@ void regle4() {
             if(SYM_COUR.CODE == ID_TOKEN) {
             	int i;
                 for (i = 0; i < k; ++i) {
-                    if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0) {
-                        if((TAB_IDFS+i)->TIDF == 1) {
-                            printf("%s ----> Erreur, une constante ne peut pas changer de valeur a partir de READ!\n", SYM_COUR.NOM);
-                            Y = 1;
-                        }	
+                    if(strcmp(SYM_COUR.NOM, (TAB_IDFS+i)->NOM) == 0 && (TAB_IDFS+i)->TIDF == 1) {
+                        printf("%s ----> Erreur, une constante ne peut pas changer de valeur a partir de READ!\n", SYM_COUR.NOM);
+                        Y = 1;	
                     }
                 }
             }
