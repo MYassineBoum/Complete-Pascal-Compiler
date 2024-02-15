@@ -85,8 +85,10 @@ typedef struct
 {
     CODES_LEX CODE;
     char NOM[20];
+    int val;
 } TSym_Cour;
 
+TSym_Cour head;
 TSym_Cour SYM_COUR;
 
 FILE * fichier;
@@ -244,6 +246,7 @@ void lire_nombre()
     // Stockage du nombre dans le jeton
     SYM_COUR.CODE = NUM_TOKEN;
     strcpy(SYM_COUR.NOM, nombre);
+    SYM_COUR.val = atoi(SYM_COUR.NOM);
 }
 
 void Sym_Suiv()
@@ -398,6 +401,7 @@ void PROGRAM()
 {
     Test_Symbole(PROGRAM_TOKEN, PROGRAM_ERR);
     Test_Symbole(ID_TOKEN, ID_ERR);
+    NbrIDFS++;
     Test_Symbole(PV_TOKEN, PV_ERR);
     BLOCK();
     Test_Symbole(PT_TOKEN, PT_ERR);
@@ -766,7 +770,7 @@ int main()
 
     PROGRAM();
 
-    //printf("Execution du programme faite.\n");
+    printf("Execution du programme faite.\n");
 
     /*if (SYM_COUR.CODE == EOF_TOKEN)
     {
