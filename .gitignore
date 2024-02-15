@@ -1,0 +1,5 @@
+# Ignore specific files
+semantique.exe
+syntaxique.exe
+lexicale.exe
+global_semantique_test.exe
