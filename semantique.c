@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef enum
 {
@@ -104,8 +105,8 @@ void store_prog();
 void store_const();
 void store_var();
 void affich();
-void regle1();
 void check();
+void regle1();
 void regle2();
 void regle3();
 void regle4();
