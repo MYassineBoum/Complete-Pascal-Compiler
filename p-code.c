@@ -168,7 +168,7 @@ typedef enum
 	STO,BRN,BZE,HLT
 } MNEMONIQUES;
 
-tpyedef struct
+typedef struct
 {
 	MNEMONIQUES MNE; // Instru
 	int SUITE; // Son suivant
@@ -176,7 +176,14 @@ tpyedef struct
 
 INSTRUCTION PCODE[TAILLECODE];
 
+int LABEL_BRN;
+int INDICE_BZE;
+int IND_BZE;
+
 int PC = 0; // Compteur d'instructions
+
+int operation = 0;
+
 // Prototypes des fonctions à utiliser
 void VARS();
 void INSTS();
@@ -677,6 +684,7 @@ void GENERER2(MNEMONIQUES M, int A) {
 	PCODE[PC].SUITE = A;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 void SaveInstToFile(INSTRUCTION INST, int i) {
 	switch( INST.MNE){
 		case LDA: fprintf(FICH_SORTIE, "%s \t %d \n", "LDA", INST.SUITE); break;
@@ -700,8 +708,8 @@ void SaveInstToFile(INSTRUCTION INST, int i) {
 		case PRN: fprintf(FICH_SORTIE, "%s \n", "PRN"); break;
 		default: Erreur(INST_PCODE_ERR); break;
  	}
- }
-
+}
+*/
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
 {
     if (SYM_COUR.CODE == cl)
@@ -740,8 +748,8 @@ void CONSTS()
         Sym_Suiv();
         
         // Définir une nouvelle constante en mémoire
-        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN.NOM;
-        TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
+        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+        strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
         TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
         
         GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
@@ -749,7 +757,7 @@ void CONSTS()
         Test_Symbole(ID_TOKEN, ID_ERR);
         Test_Symbole(EG_TOKEN, EG_ERR);
         
-        // Empiler la valeur lue (correspon à NUM_TOKEN)
+        // Empiler la valeur lue (correspond à NUM_TOKEN)
         GENERER2(LDI, SYM_COUR.val);
         GENERER1(STO);
         
@@ -762,7 +770,7 @@ void CONSTS()
         {
         	// Définir une nouvelle constante en mémoire
         	TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN.NOM;
-        	TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
+        	strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
         	TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
         	GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
         	
@@ -912,7 +920,7 @@ void AFFEC()
 {
 	
 	// Définir une nouvelle variable en mémoire
-    TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
+    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
     
@@ -936,6 +944,8 @@ void SI()
 {
     Test_Symbole(IF_TOKEN, IF_ERR);
     COND();
+    IND_BZE = PC;
+    GENERER2(BZE, PC + 1);
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
     if (SYM_COUR.CODE == ELSE_TOKEN)
@@ -947,9 +957,14 @@ void SI()
 void TANTQUE()
 {
     Test_Symbole(WHILE_TOKEN, WHILE_ERR);
+    LABEL_BRN = PC + 1;
     COND();
+    INDICE_BZE = PC;
+    GENERER2(BZE, INDICE_BZE);
     Test_Symbole(DO_TOKEN, DO_ERR);
     INST();
+    GENERER2(BRN, LABEL_BRN);
+    PCODE[INDICE_BZE].SUITE = PC + 1;
 }
 
 void ECRIRE()
@@ -974,7 +989,7 @@ void LIRE()
     Test_Symbole(PO_TOKEN, PO_ERR);
     
     // Définir une nouvelle variable en mémoire
-    TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
+    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
 	
@@ -990,7 +1005,7 @@ void LIRE()
         Sym_Suiv();
         
         // Définir une nouvelle variable en mémoire
-    	TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
+    	strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
     	TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     	TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
     	
@@ -1010,13 +1025,35 @@ void COND()
     EXPR();
     RELOP();
     EXPR();
+    switch(operation) {
+    	case 1:
+    		GENERER1(EQL);
+    		break;
+    	case 2:
+    		GENERER1(NEQ);
+    		break;
+    	case 3:
+    		GENERER1(LSS);
+    		break;
+    	case 4:
+    		GENERER1(GTR);
+    		break;
+    	case 5:
+    		GENERER1(LEQ);
+    		break;
+    	case 6:
+    		GENERER1(GEQ);
+    		break;
+    	case default:
+    		Erreur(ERREUR_ERR);
+    		break;
+	}
 }
 
 void EXPR()
 {
     // TERM { ADDOP TERM }
     TERM();
-	GENERER1(LDI);
     while (SYM_COUR.CODE == PLUS_TOKEN || SYM_COUR.CODE == MOINS_TOKEN)
     {
         ADDOP();
@@ -1043,7 +1080,7 @@ void FACT()
     	// Itérer sur la table des symboles pour trouver une correspondance des noms
     	int i;
         for(int i = 0; i < IND_DER_SYM_ACC; i++) {
-        	if(TABLESYM[i].NOM = SYM_COUR.NOM) {
+        	if(strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0) {
         		// Empiler l'adresse de la constante ou de la variable trouvée
         		GENERER2(LDA, TABLESYM[i].ADRESSE);
         		// Remplace cette adresse par sa valeur
@@ -1078,27 +1115,27 @@ void RELOP()
     {
     case EG_TOKEN:
     	Test_Symbole(EG_TOKEN, EG_ERR);
-    	GENERER1(EQL);
+    	operation = 1;
     	break;
     case DIFF_TOKEN:
     	Test_Symbole(DIFF_TOKEN, DIFF_ERR);
-    	GENERER1(NEQ);
+    	operation = 2;
     	break;
      case INF_TOKEN:
         Test_Symbole(INF_TOKEN, INF_ERR);
-        GENERER1(LSS);
+        operation = 3;
         break;
     case SUP_TOKEN:
         Test_Symbole(SUP_TOKEN, SUP_ERR);
-        GENERER1(GTR);
+        operation = 4;
         break;
     case INFEG_TOKEN:
         Test_Symbole(INFEG_TOKEN, INFEG_ERR);
-        GENERER1(LEQ);
+        operation = 5;
         break;
     case SUPEG_TOKEN:
         Test_Symbole(SUPEG_TOKEN, SUPEG_ERR);
-        GENERER1(GEQ);
+        operation = 6;   
         break;
     default:
         Erreur(ERREUR_ERR);
