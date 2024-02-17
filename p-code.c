@@ -218,6 +218,9 @@ void Check();
 //P CODE section
 void GENERER1(MNEMONIQUES M);
 void GENERER2(MNEMONIQUES M, int A);
+void SaveInstToFile(INSTRUCTION INST, int i);
+void INTER_PCODE();
+void INTER_INST(INSTRUCTION INST);
 
 // Definition des fonctions à utiliser
 
@@ -683,10 +686,12 @@ void GENERER2(MNEMONIQUES M, int A) {
 	PCODE[PC].MNE = M;
 	PCODE[PC].SUITE = A;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*
+// Interpreteur
+
 void SaveInstToFile(INSTRUCTION INST, int i) {
-	switch( INST.MNE){
+	switch(INST.MNE){
 		case LDA: fprintf(FICH_SORTIE, "%s \t %d \n", "LDA", INST.SUITE); break;
 		case LDI: fprintf(FICH_SORTIE, "%s \t %d \n", "LDI", INST.SUITE); break;
 		case INT: fprintf(FICH_SORTIE, "%s \t %d \n", "INT", INST.SUITE); break;
@@ -709,7 +714,62 @@ void SaveInstToFile(INSTRUCTION INST, int i) {
 		default: Erreur(INST_PCODE_ERR); break;
  	}
 }
-*/
+
+void INTER_INST(INSTRUCTION INST) {
+	int val1, adr, val2;
+	switch(INST.MNE) {
+		case INT:
+			OFFSET=SP=INST.SUITE; 
+			PC++; 
+			break;
+		case LDI:
+			MEM[++SP]=INST.SUITE; 
+			PC++; 
+			break;
+		case LDA:
+			MEM[++SP]=INST.SUITE; 
+			PC++; 
+			break;
+		case STO: 
+			val1=MEM[SP--]; 
+			adr=MEM[SP--];
+			MEM[adr]=val1;
+			PC++; 
+			break;
+		case LDV: 
+			adr=MEM[SP--]; 
+			MEM[++SP]=MEM[adr];
+			PC++; 
+			break;
+		case EQL:
+			val1=MEM[SP--];
+			val2=MEM[SP--];
+			MEM[++SP]=(val1==val2);
+			PC++;
+			break;
+		case LEQ:
+			val2=MEM[SP--];
+			val1=MEM[SP--];
+			MEM[++SP]=(val1<=val2);
+			PC++; 
+			break;
+		case BZE:
+			if (MEM[SP--]==0) PC=INST.SUITE;
+			else PC++;
+			break;
+		case BRN:
+			PC=INST.SUITE; 
+			break;
+	}
+}
+
+void INTER_PCODE(){
+	PC=0;
+	while (PCODE[PC].MNE!=HLT) INTER_INST(PCODE[PC]);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
 {
     if (SYM_COUR.CODE == cl)
@@ -944,10 +1004,11 @@ void SI()
 {
     Test_Symbole(IF_TOKEN, IF_ERR);
     COND();
+    GENERER1(BZE);
     IND_BZE = PC;
-    GENERER2(BZE, PC + 1);
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
+    PCODE[IND_BZE].SUITE = PC + 1;
     if (SYM_COUR.CODE == ELSE_TOKEN)
     {
         INST();
@@ -959,8 +1020,8 @@ void TANTQUE()
     Test_Symbole(WHILE_TOKEN, WHILE_ERR);
     LABEL_BRN = PC + 1;
     COND();
+    GENERER1(BZE); // Branchement pour dépasser les instructions de IF, si la condition est fausse (sommet = 0)
     INDICE_BZE = PC;
-    GENERER2(BZE, INDICE_BZE);
     Test_Symbole(DO_TOKEN, DO_ERR);
     INST();
     GENERER2(BRN, LABEL_BRN);
@@ -1235,4 +1296,16 @@ void CAS()
     }
 
     Test_Symbole(END_TOKEN, END_ERR);
+}
+
+int main() {
+	FILE * FICH_SORTIE;
+	FICH_SORTIE = fopen("fichierSortie.op", "w+");
+	void SavePCodeToFile() {
+		int i;
+		for (i = 0; i <= PC; i++) {
+			SaveInstToFile(PCODE[i])
+		}
+	}
+	fclose(FICH_SORTIE);
 }
