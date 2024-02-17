@@ -182,7 +182,9 @@ int IND_BZE;
 
 int PC = 0; // Compteur d'instructions
 
-int operation = 0;
+int opRELOP = 0;
+int opMULOP = 0;
+int opADDOP = 0;
 
 // Prototypes des fonctions à utiliser
 void VARS();
@@ -1086,7 +1088,7 @@ void COND()
     EXPR();
     RELOP();
     EXPR();
-    switch(operation) {
+    switch(opRELOP) {
     	case 1:
     		GENERER1(EQL);
     		break;
@@ -1119,6 +1121,17 @@ void EXPR()
     {
         ADDOP();
         TERM();
+        switch(opADDOP) {
+        	case 1:
+        		GENERER1(ADD);
+        		break;
+        	case 2:
+        		GENERER1(SUB);
+        		break;
+        	case default:
+        		Erreur(ERREUR_ERR);
+    			break;
+		}
     }
 }
 
@@ -1130,6 +1143,17 @@ void TERM()
     {
         MULOP();
         FACT();
+        switch(opMULOP) {
+        	case 1:
+        		GENERER1(MUL);
+        		break;
+        	case 2:
+        		GENERER1(DIV);
+        		break;
+        	case default:
+        		Erreur(ERREUR_ERR);
+    			break;
+		}
     }
 }
 
@@ -1176,27 +1200,27 @@ void RELOP()
     {
     case EG_TOKEN:
     	Test_Symbole(EG_TOKEN, EG_ERR);
-    	operation = 1;
+    	opRELOP = 1;
     	break;
     case DIFF_TOKEN:
     	Test_Symbole(DIFF_TOKEN, DIFF_ERR);
-    	operation = 2;
+    	opRELOP = 2;
     	break;
      case INF_TOKEN:
         Test_Symbole(INF_TOKEN, INF_ERR);
-        operation = 3;
+        opRELOP = 3;
         break;
     case SUP_TOKEN:
         Test_Symbole(SUP_TOKEN, SUP_ERR);
-        operation = 4;
+        opRELOP = 4;
         break;
     case INFEG_TOKEN:
         Test_Symbole(INFEG_TOKEN, INFEG_ERR);
-        operation = 5;
+        opRELOP = 5;
         break;
     case SUPEG_TOKEN:
         Test_Symbole(SUPEG_TOKEN, SUPEG_ERR);
-        operation = 6;   
+        opRELOP = 6;   
         break;
     default:
         Erreur(ERREUR_ERR);
@@ -1210,11 +1234,11 @@ void ADDOP()
     {
     case PLUS_TOKEN:
         Test_Symbole(PLUS_TOKEN, PLUS_ERR);
-        GENERER1(ADD);
+        opADDOP = 1;
         break;
     case MOINS_TOKEN:
         Test_Symbole(MOINS_TOKEN, MOINS_ERR);
-        GENERER1(SUB);
+        opADDOP = 2;
         break;
     default:
         Erreur(ERREUR_ERR);
@@ -1228,11 +1252,11 @@ void MULOP()
     {
     case MULT_TOKEN:
         Test_Symbole(MULT_TOKEN, MULT_ERR);
-        GENERER1(MUL);
+        opMULOP = 1;
         break;
     case DIV_TOKEN:
         Test_Symbole(DIV_TOKEN, DIV_ERR);
-        GENERER1(DIV);
+        opMULOP = 2;
         break;
     default:
         Erreur(ERREUR_ERR);
