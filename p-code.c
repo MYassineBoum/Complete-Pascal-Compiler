@@ -114,7 +114,7 @@ TSym_Cour SYM_COUR;
 
 FILE *fichier;
 
-char Car_Cour; // caractère courant
+char Car_Cour; // caractÃ¨re courant
 
 typedef enum
 {
@@ -158,7 +158,7 @@ TSYMB TABLESYM[TABLEINDEX];
 int IND_DER_SYM_ACC = 0; // Index dans TABLESYM
 int OFFSET = -1;
 
-int MEM[TAILLEMEM]; // Mémoire (Pile de la machine)
+int MEM[TAILLEMEM]; // MÃ©moire (Pile de la machine)
 int SP; // Pointeur vers le sommet du pile
 
 typedef enum
@@ -168,7 +168,7 @@ typedef enum
 	STO,BRN,BZE,HLT
 } MNEMONIQUES;
 
-tpyedef struct
+typedef struct
 {
 	MNEMONIQUES MNE; // Instru
 	int SUITE; // Son suivant
@@ -177,7 +177,7 @@ tpyedef struct
 INSTRUCTION PCODE[TAILLECODE];
 
 int PC = 0; // Compteur d'instructions
-// Prototypes des fonctions à utiliser
+// Prototypes des fonctions Ã  utiliser
 void VARS();
 void INSTS();
 void INST();
@@ -212,28 +212,28 @@ void Check();
 void GENERER1(MNEMONIQUES M);
 void GENERER2(MNEMONIQUES M, int A);
 
-// Definition des fonctions à utiliser
+// Definition des fonctions Ã  utiliser
 
 void lire_mot()
 {
     char mot[20];
     int indice = 0;
 
-    // Lecture du premier caractère (lettre)
+    // Lecture du premier caractÃ¨re (lettre)
     mot[indice++] = Car_Cour;
     Lire_Car();
 
-    // Lecture des caractères suivants (lettres ou chiffres)
+    // Lecture des caractÃ¨res suivants (lettres ou chiffres)
     while (isalpha(Car_Cour) || isdigit(Car_Cour))
     {
         mot[indice++] = Car_Cour;
         Lire_Car();
     }
 
-    // Ajout du caractère de fin de chaîne
+    // Ajout du caractÃ¨re de fin de chaÃ®ne
     mot[indice] = '\0';
 
-    // Vérifier si le mot est un mot-clé
+    // VÃ©rifier si le mot est un mot-clÃ©
     if (stricmp(mot, "program") == 0)
     {
         SYM_COUR.CODE = PROGRAM_TOKEN;
@@ -309,9 +309,9 @@ void lire_mot()
     }
     else
     {
-        // Si ce n'est pas un mot-clé, c'est un identifiant
+        // Si ce n'est pas un mot-clÃ©, c'est un identifiant
         SYM_COUR.CODE = ID_TOKEN;
-        // Repérer les ID_TOKEN par des adresses
+        // RepÃ©rer les ID_TOKEN par des adresses
         //TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
         //TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
         //TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
@@ -343,7 +343,7 @@ void lire_nombre()
         Lire_Car();
     }
 
-    // Ajout du caractère de fin de chaîne
+    // Ajout du caractÃ¨re de fin de chaÃ®ne
     nombre[indice] = '\0';
 
     // Stockage du nombre dans le jeton
@@ -365,7 +365,7 @@ int main()
     TAB_IDFS = malloc(100 * sizeof(T_TAB_IDF));
     if (TAB_IDFS == NULL)
     {
-        perror("Erreur lors de l'allocation de mémoire pour TAB_IDFS!");
+        perror("Erreur lors de l'allocation de mÃ©moire pour TAB_IDFS!");
         return 1;
     }
 
@@ -658,7 +658,7 @@ void Erreur(CODES_ERR code)
     exit(EXIT_FAILURE);
 }
 
-// Fonctions de génération du P-CODE
+// Fonctions de gÃ©nÃ©ration du P-CODE
 
 void GENERER1(MNEMONIQUES M) {
 	if (PC == TAILLECODE) {
@@ -677,6 +677,7 @@ void GENERER2(MNEMONIQUES M, int A) {
 	PCODE[PC].SUITE = A;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
 void SaveInstToFile(INSTRUCTION INST, int i) {
 	switch( INST.MNE){
 		case LDA: fprintf(FICH_SORTIE, "%s \t %d \n", "LDA", INST.SUITE); break;
@@ -700,8 +701,8 @@ void SaveInstToFile(INSTRUCTION INST, int i) {
 		case PRN: fprintf(FICH_SORTIE, "%s \n", "PRN"); break;
 		default: Erreur(INST_PCODE_ERR); break;
  	}
- }
-
+}
+*/
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
 {
     if (SYM_COUR.CODE == cl)
@@ -739,8 +740,8 @@ void CONSTS()
     case CONST_TOKEN:
         Sym_Suiv();
         
-        // Définir une nouvelle constante en mémoire
-        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN.NOM;
+        // DÃ©finir une nouvelle constante en mÃ©moire
+        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
         TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
         TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
         
@@ -749,7 +750,7 @@ void CONSTS()
         Test_Symbole(ID_TOKEN, ID_ERR);
         Test_Symbole(EG_TOKEN, EG_ERR);
         
-        // Empiler la valeur lue (correspon à NUM_TOKEN)
+        // Empiler la valeur lue (correspon Ã  NUM_TOKEN)
         GENERER2(LDI, SYM_COUR.val);
         GENERER1(STO);
         
@@ -760,7 +761,7 @@ void CONSTS()
         Test_Symbole(PV_TOKEN, PV_ERR);
         while (SYM_COUR.CODE == ID_TOKEN)
         {
-        	// Définir une nouvelle constante en mémoire
+        	// DÃ©finir une nouvelle constante en mÃ©moire
         	TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN.NOM;
         	TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
         	TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
@@ -770,7 +771,7 @@ void CONSTS()
         	
             Test_Symbole(EG_TOKEN, EG_ERR);
             
-            // Empiler la valeur lue (correspon à NUM_TOKEN)
+            // Empiler la valeur lue (correspon Ã  NUM_TOKEN)
             GENERER2(LDI, SYM_COUR.val);
             GENERER1(STO);
             
@@ -911,7 +912,7 @@ void INST()
 void AFFEC()
 {
 	
-	// Définir une nouvelle variable en mémoire
+	// DÃ©finir une nouvelle variable en mÃ©moire
     TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
@@ -928,7 +929,7 @@ void AFFEC()
     }
     Test_Symbole(AFF_TOKEN, AFF_ERR);
     EXPR();
-    // Stocker la valeur au sommet de la pile dans l'adresse indiquée dans le sous-sommet
+    // Stocker la valeur au sommet de la pile dans l'adresse indiquÃ©e dans le sous-sommet
     GENERER1(STO);
 }
 
@@ -973,7 +974,7 @@ void LIRE()
     Test_Symbole(READ_TOKEN, READ_ERR);
     Test_Symbole(PO_TOKEN, PO_ERR);
     
-    // Définir une nouvelle variable en mémoire
+    // DÃ©finir une nouvelle variable en mÃ©moire
     TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
@@ -989,7 +990,7 @@ void LIRE()
     {
         Sym_Suiv();
         
-        // Définir une nouvelle variable en mémoire
+        // DÃ©finir une nouvelle variable en mÃ©moire
     	TABLESYM[IND_DER_SYM_ACC].NOM = SYM_COUR.NOM;
     	TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
     	TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
@@ -1040,11 +1041,11 @@ void FACT()
     switch (SYM_COUR.CODE)
     {
     case ID_TOKEN:
-    	// Itérer sur la table des symboles pour trouver une correspondance des noms
+    	// ItÃ©rer sur la table des symboles pour trouver une correspondance des noms
     	int i;
         for(int i = 0; i < IND_DER_SYM_ACC; i++) {
         	if(TABLESYM[i].NOM = SYM_COUR.NOM) {
-        		// Empiler l'adresse de la constante ou de la variable trouvée
+        		// Empiler l'adresse de la constante ou de la variable trouvÃ©e
         		GENERER2(LDA, TABLESYM[i].ADRESSE);
         		// Remplace cette adresse par sa valeur
         		GENERER1(LDV);
@@ -1056,7 +1057,7 @@ void FACT()
         
         break;
     case NUM_TOKEN:
-    	// Empiler la valeur trouvée
+    	// Empiler la valeur trouvÃ©e
     	GENERER2(LDI, SYM_COUR.val);
     	
         Test_Symbole(NUM_TOKEN, NUM_ERR);
