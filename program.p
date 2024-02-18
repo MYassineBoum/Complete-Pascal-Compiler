@@ -1,7 +1,8 @@
 program test;
-const tata=12;
 var x;
 begin
-   x:=10;
-   x:=x+tata;
+   for x=5 downto 0 do  
+	  write(x);
 end.
+
+
