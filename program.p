@@ -1,8 +1,8 @@
-program test11;
-const toto=21;
-var x, y;
-Begin
-    x:=toto;
-    read(y);
-    write(x)
+program test;
+var x;
+begin
+   for x=5 downto 0 do  
+	  write(x);
 end.
+
+
