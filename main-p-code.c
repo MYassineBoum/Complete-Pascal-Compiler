@@ -318,7 +318,7 @@ void ADDOP();
 void RELOP();
 void COND();
 void Lire_Car();
-void Erreur(CODES_ERR code);
+void Erreur(CODES_ERR code, char * origin );
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR);
 void PROGRAM();
 void BLOCK();
@@ -487,35 +487,7 @@ void lire_nombre()
     SYM_COUR.val = atoi(SYM_COUR.NOM);
 }
 
-int main()
-{
-    fichier = fopen("program.p", "r");
-    if (fichier == NULL)
-    {
-        perror("Erreur lors de l'ouverture du fichier!");
-        return 1;
-    }
 
-    // Initialize TAB_IDFS
-    TAB_IDFS = malloc(100 * sizeof(T_TAB_IDF));
-    if (TAB_IDFS == NULL)
-    {
-        perror("Erreur lors de l'allocation de m�moire pour TAB_IDFS!");
-        return 1;
-    }
-
-    Lire_Car();
-    Sym_Suiv();
-
-    PROGRAM();
-
-    printf("Execution du programme faite.\n");
-
-    fclose(fichier);
-    free(TAB_IDFS); // Free allocated memory
-
-    return 0;
-}
 
 void Check()
 {
@@ -784,12 +756,12 @@ void Sym_Suiv()
     // printf("Symbol: %s\n", SYM_COUR.NOM);
 }
 
-void Erreur(CODES_ERR code)
+void Erreur(CODES_ERR code, char * origin )
 {
-    printf("Erreur: %d\n", code);
-    printf("%s", getErrorMessage(code));
-    // printf("Current Token: %d\n", SYM_COUR.CODE);
-    // printf("Current Lexeme: %s\n", SYM_COUR.NOM);
+    //printf("Syntaxic error\n");
+    printf("Syntaxic error: %s  + origin: %s\n", getErrorMessage(code),origin);
+    //printf("Current Token: %d\n", SYM_COUR.CODE);
+    //printf("Current Lexeme: %s\n", SYM_COUR.NOM);
     exit(EXIT_FAILURE);
 }
 
@@ -881,7 +853,7 @@ void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i)
         fprintf(FICH_SORTIE, "%s \n", "PRN");
         break;
     default:
-        Erreur(INST_PCODE_ERR);
+        Erreur(INST_PCODE_ERR,"SaveInstToFile");
         break;
     }
 }
@@ -954,7 +926,7 @@ void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
         Sym_Suiv();
     }
     else
-        Erreur(COD_ERR);
+        Erreur(COD_ERR,"Test_Symbole");
 }
 
 void PROGRAM()
@@ -1031,7 +1003,7 @@ void CONSTS()
     case BEGIN_TOKEN:
         break;
     default:
-        Erreur(CONST_VAR_BEGIN_ERR);
+        Erreur(CONST_VAR_BEGIN_ERR,"CONSTS");
         break;
     }
 }
@@ -1078,7 +1050,7 @@ void VARS()
     case BEGIN_TOKEN:
         break;
     default:
-        Erreur(VAR_BEGIN_ERR);
+        Erreur(VAR_BEGIN_ERR,"VARS");
         break;
     }
 }
@@ -1106,12 +1078,12 @@ void INSTS()
         }
         else
         {
-            Erreur(FIN_ERR);
+            Erreur(FIN_ERR,"INSTS");
         }
     }
     else
     {
-        Erreur(BEGIN_ERR);
+        Erreur(BEGIN_ERR,"INSTS");
     }
 }
 
@@ -1284,7 +1256,7 @@ void COND()
         GENERER1(GEQ);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"COND");
         break;
     }
 }
@@ -1306,7 +1278,7 @@ void EXPR()
             GENERER1(SUB);
             break;
         default:
-            Erreur(ERREUR_ERR);
+            Erreur(ERREUR_ERR,"EXPR");
             break;
         }
     }
@@ -1329,7 +1301,7 @@ void TERM()
             GENERER1(DIV);
             break;
         default:
-            Erreur(ERREUR_ERR);
+            Erreur(ERREUR_ERR,"TERM");
             break;
         }
     }
@@ -1369,7 +1341,7 @@ void FACT()
         Test_Symbole(PF_TOKEN, PF_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"FACT");
         break;
     }
 }
@@ -1403,7 +1375,7 @@ void RELOP()
         opRELOP = 6;
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"RELOP");
         break;
     }
 }
@@ -1421,7 +1393,7 @@ void ADDOP()
         opADDOP = 2;
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"ADDOP");
         break;
     }
 }
@@ -1439,7 +1411,7 @@ void MULOP()
         opMULOP = 2;
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"MULOP");
         break;
     }
 }
@@ -1450,6 +1422,9 @@ void POUR()
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(AFF_TOKEN, AFF_ERR);
 
+    //this line was needed
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
+
     switch (SYM_COUR.CODE)
     {
     case DOWNTO_TOKEN:
@@ -1459,7 +1434,7 @@ void POUR()
         Test_Symbole(INTO_TOKEN, INTO_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"POUR");
         break;
     }
 
@@ -1517,6 +1492,35 @@ int main()
 {
     FILE *FICH_SORTIE;
     FICH_SORTIE = fopen("fichierSortie.op", "w+");
+    fichier = fopen("program.p", "r");
+    if (fichier == NULL)
+    {
+        perror("Erreur lors de l'ouverture du fichier!");
+        return 1;
+    }
+
+    // Initialize TAB_IDFS
+    TAB_IDFS = malloc(100 * sizeof(T_TAB_IDF));
+    if (TAB_IDFS == NULL)
+    {
+        perror("Erreur lors de l'allocation de memoire pour TAB_IDFS!");
+        return 1;
+    }
+
+    Lire_Car();
+    Sym_Suiv();
+
+    PROGRAM();
+
+    printf("Execution du programme faite.\n");
+
+    
     SavePCodeToFile(FICH_SORTIE);
     fclose(FICH_SORTIE);
+
+    fclose(fichier);
+    free(TAB_IDFS); // Free allocated memory
+
+    return 0;
+    
 }

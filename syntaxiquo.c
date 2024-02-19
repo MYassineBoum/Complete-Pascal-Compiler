@@ -255,7 +255,7 @@ void ADDOP();
 void RELOP();
 void COND();
 void Lire_Car();
-void Erreur(CODES_ERR code);
+void Erreur(CODES_ERR code, char * origin);
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR);
 void PROGRAM();
 void BLOCK();
@@ -705,10 +705,10 @@ void Sym_Suiv()
     // printf("Symbol: %s\n", SYM_COUR.NOM);
 }
 
-void Erreur(CODES_ERR code)
+void Erreur(CODES_ERR code, char * origin )
 {
-    printf("Syntaxic error\n");
-    printf("%s\n", getErrorMessage(code));
+    //printf("Syntaxic error\n");
+    printf("Syntaxic error: %s  + origin: %s\n", getErrorMessage(code),origin);
     //printf("Current Token: %d\n", SYM_COUR.CODE);
     //printf("Current Lexeme: %s\n", SYM_COUR.NOM);
     exit(EXIT_FAILURE);
@@ -721,7 +721,7 @@ void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
         Sym_Suiv();
     }
     else
-        Erreur(COD_ERR);
+        Erreur(COD_ERR, SYM_COUR.NOM);
 }
 
 void PROGRAM()
@@ -767,7 +767,7 @@ void CONSTS()
     case BEGIN_TOKEN:
         break;
     default:
-        Erreur(CONST_VAR_BEGIN_ERR);
+        Erreur(CONST_VAR_BEGIN_ERR,"CONSTS");
         break;
     }
 }
@@ -791,7 +791,7 @@ void VARS()
     case BEGIN_TOKEN:
         break;
     default:
-        Erreur(VAR_BEGIN_ERR);
+        Erreur(VAR_BEGIN_ERR,"VARS");
         break;
     }
 }
@@ -819,12 +819,12 @@ void INSTS()
         }
         else
         {
-            Erreur(FIN_ERR);
+            Erreur(FIN_ERR,"INSTS");
         }
     }
     else
     {
-        Erreur(BEGIN_ERR);
+        Erreur(BEGIN_ERR,"INSTS");
     }
 }
 
@@ -976,7 +976,7 @@ void FACT()
         Test_Symbole(PF_TOKEN, PF_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"FACT");
         break;
     }
 }
@@ -994,7 +994,7 @@ void RELOP()
         Test_Symbole(EG_TOKEN, EG_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"RELOP");
         break;
     }
 }
@@ -1010,7 +1010,7 @@ void ADDOP()
         Test_Symbole(MOINS_TOKEN, MOINS_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"ADDOP");
         break;
     }
 }
@@ -1026,7 +1026,7 @@ void MULOP()
         Test_Symbole(DIV_TOKEN, DIV_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"MULOP");
         break;
     }
 }
@@ -1036,6 +1036,7 @@ void POUR()
     Test_Symbole(FOR_TOKEN, FOR_ERR);
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(AFF_TOKEN, AFF_ERR);
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
 
     switch (SYM_COUR.CODE)
     {
@@ -1046,7 +1047,7 @@ void POUR()
         Test_Symbole(INTO_TOKEN, INTO_ERR);
         break;
     default:
-        Erreur(ERREUR_ERR);
+        Erreur(ERREUR_ERR,"POUR");
         break;
     }
 
