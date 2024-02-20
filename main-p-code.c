@@ -908,14 +908,20 @@ void INTER_INST(INSTRUCTION INST)
     case BRN:
         PC = INST.SUITE;
         break;
-    }
+    } // end switch
+
+    PC ++;
 }
 
 void INTER_PCODE()
 {
     PC = 0;
-    while (PCODE[PC].MNE != HLT)
+    while (PCODE[PC].MNE != HLT) {
         INTER_INST(PCODE[PC]);
+        
+        printf("PC: %d\n", PC);
+    }
+       
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1541,9 +1547,16 @@ int main()
 
     
     SavePCodeToFile(FICH_SORTIE);
+
+fclose(fichier);
+    
+
+
     fclose(FICH_SORTIE);
 
-    fclose(fichier);
+    INTER_PCODE();
+
+    
     free(TAB_IDFS); // Free allocated memory
 
     return 0;

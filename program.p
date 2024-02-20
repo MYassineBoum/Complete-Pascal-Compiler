@@ -1,6 +1,9 @@
 program test;
+const tata=12; titi=123;
 var x;
 begin
-   for x := 3 to 9 do  
+   x:=tata+titi;
    write(x);
 end.
+
+

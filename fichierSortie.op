@@ -1,11 +1,16 @@
 ADD 
 LDA 	 0 
-LDI 	 3 
+LDI 	 12 
 STO 
-LDI 	 1 
+LDA 	 1 
+LDI 	 123 
+STO 
+LDA 	 2 
+LDA 	 0 
+LDV 
+LDA 	 1 
+LDV 
 ADD 
-LDI 	 9 
-NEQ 
-BZE 	 11 
+STO 
 PRN 
-BRN 	 0 
+
