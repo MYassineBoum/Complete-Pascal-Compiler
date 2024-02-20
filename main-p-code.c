@@ -1421,22 +1421,42 @@ void MULOP()
     }
 }
 
+
+
+
 void POUR()
 {
     Test_Symbole(FOR_TOKEN, FOR_ERR);
     
-    AFFEC();
-    
-    
+    // D�finir une nouvelle variable en m�moire
+    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
 
+    // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
+    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+
+    // ID := EXPR
+    Test_Symbole(ID_TOKEN, ID_ERR);
+    if (TVAR != lastType)
+    {
+        printf("%s ----> Erreur:  Une constante ne peut changer de valeur dans le programme.", lastIdToken);
+        exit(EXIT_FAILURE);
+    }
+    Test_Symbole(AFF_TOKEN, AFF_ERR);
+
+    Test_Symbole(NUM_ERR, NUM_ERR);
+    GENERER2(LDI, SYM_COUR.val);
+    GENERER1(STO);
+    
     switch (SYM_COUR.CODE)
     {
     case DOWNTO_TOKEN:
-        Test_Symbole(DOWNTO_TOKEN, DOWNTO_ERR);
+        Sym_Suiv();
         opLoop = 1;
         break;
     case INTO_TOKEN:
-        Test_Symbole(INTO_TOKEN, INTO_ERR);
+        Sym_Suiv();
         opLoop = 2;
         break;
     default:
@@ -1445,19 +1465,18 @@ void POUR()
     }
 
     if (opLoop == 1) {
-    	GENERER2(LDI, 1);
-		GENERER1(SUB); 	
-	} 
-	else if (opLoop == 2) {
-		GENERER2(LDI, 1);
-		GENERER1(ADD); 
+		GENERER1(ADD); 	
+	} else if (opLoop == 2) {
+		GENERER1(SUB); 
 	}
+
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
+
+    
+	
     
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(NEQ);
-
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
-    
     
     GENERER1(BZE);
     INDICE_BZE = PC;
