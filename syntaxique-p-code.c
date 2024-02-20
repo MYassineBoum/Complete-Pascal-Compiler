@@ -3,6 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#define TABLEINDEX 100
+#define TAILLEMEM 100
+#define TAILLECODE 100
+
 typedef enum
 {
     ADD,
@@ -69,6 +73,36 @@ FILE *fichier;
 
 char Car_Cour; // Current character
 
+int IND_DER_SYM_ACC = 0; // Index dans TABLESYM
+int OFFSET = -1;
+
+int MEM[TAILLEMEM]; // M�moire (Pile de la machine)
+int SP;             // Pointeur vers le sommet du pile
+
+typedef struct
+{
+    MNEMONIQUES MNE; // Instru
+    int SUITE;       // Son suivant
+} INSTRUCTION;
+
+
+
+int LABEL_BRN;
+int INDICE_BZE;
+int IND_BZE;
+
+int PC = 0; // Compteur d'instructions
+
+int opRELOP = 0;
+int opMULOP = 0;
+int opADDOP = 0;
+int opLoop = 0;
+
+// p code functions
+
+
+void INTER_INST(INSTRUCTION INST);
+
 // Function prototypes
 void Lire_Car();
 void Erreur(MNEMONIQUES_ERR code);
@@ -79,6 +113,137 @@ void lire_mot();
 void lire_nombre();
 
 void Sym_Suiv();
+
+
+
+
+
+
+void INTER_INST(INSTRUCTION INST)
+{
+    int val1, adr, val2;
+    switch (INST.MNE)
+    {
+    case INT:
+        OFFSET = SP = INST.SUITE;
+        PC++;
+        break;
+    case LDI:
+        MEM[++SP] = INST.SUITE;
+        PC++;
+        break;
+    case LDA:
+        MEM[++SP] = INST.SUITE;
+        PC++;
+        break;
+    case STO:
+        val1 = MEM[SP--];
+        adr = MEM[SP--];
+        MEM[adr] = val1;
+        PC++;
+        break;
+    case LDV:
+        adr = MEM[SP--];
+        MEM[++SP] = MEM[adr];
+        PC++;
+        break;
+    case EQL:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = (val1 == val2);
+        PC++;
+        break;
+    case LEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 <= val2);
+        PC++;
+        break;
+    case GEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 >= val2);
+        PC++;
+        break;
+    case LSS:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 < val2);
+        PC++;
+        break;
+    case GTR:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 > val2);
+        PC++;
+        break;
+    case NEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 != val2);
+        PC++;
+        break;
+    case INN:
+        scanf("%d", MEM[SP--]);
+        PC++;
+        break;
+    case BZE:
+        if (MEM[SP--] == 0)
+            PC = INST.SUITE;
+        else
+            PC++;
+        break;
+    case BRN:
+        PC = INST.SUITE;
+        break;
+    case HLT:
+        PC++;
+        break;
+    case ADD:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 + val2;
+        PC++;
+        break;
+    case SUB:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 - val2;
+        PC++;
+        break;
+    case MUL:   
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 * val2;
+        PC++;
+        break;
+    case DIV:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 / val2;
+        PC++;
+        break;
+    case PRN:
+        printf("%d\n", MEM[SP--]);
+        PC++;
+        break;
+    } 
+
+    // printf("%d\n", INST.MNE);
+
+    // for (int i = 0; i < SP; i++)
+    // {
+    //     printf("%d ", MEM[i]);
+    // }
+    
+    // printf("\n\n");
+}
+
+
+
+
+
+
 
 // Function definitions
 void lire_mot()
@@ -273,6 +438,7 @@ void PCODE()
 
 void INST_PCODE()
 {
+    INSTRUCTION INST;
     while (SYM_COUR.CODE != HLT && SYM_COUR.CODE != EOF_TOKEN)
 
     {
@@ -284,85 +450,152 @@ void INST_PCODE()
         switch (SYM_COUR.CODE)
         {
 
+
         case MUL:
             // Code for multiplication operations
+           
+            INST.MNE = MUL;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case DIV:
             // Code for  division operations
+
+            INST.MNE = DIV;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case SUB:
             // Code for subtraction operation
+           
+            INST.MNE = SUB;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case ADD:
             // Code for addition operation
+          
+            INST.MNE = ADD;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case EQL:
             // Code for equality comparison
+         
+            INST.MNE = EQL;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case NEQ:
             // Code for inequality comparison
+       
+            INST.MNE = NEQ;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case GTR:
             // Code for greater than comparison
+       
+            INST.MNE = GTR;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case LSS:
             // Code for less than comparison
+           
+            INST.MNE = LSS;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case GEQ:
             // Code for greater than or equal to comparison
+           
+            INST.MNE = GEQ;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case LEQ:
             // Code for less than or equal to comparison
+           
+            INST.MNE = LEQ;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case PRN:
             // Code for print operation
+      
+            INST.MNE = PRN;
+            INTER_INST(INST);
             Sym_Suiv();
+
             break;
         case INN:
             // Code for input operation
+      
+            INST.MNE = INN;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case INT:
             // Code for integer declaration
             Sym_Suiv();
+         
+            INST.MNE = INT;
+            INST.SUITE = SYM_COUR.val;
+            INTER_INST(INST);
+
             Test_Symbole(SYM_COUR.CODE, NUM_TOKEN);
+            // defin instrution
+
             break;
         case LDI:
             // Code for loading value from memory
             Sym_Suiv();
+     
+            INST.MNE = LDI;
+            INST.SUITE = SYM_COUR.val;
+            INTER_INST(INST);
             Test_Symbole(SYM_COUR.CODE, NUM_TOKEN);
             break;
         case LDA:
             // Code for loading address
             Sym_Suiv();
+            
+            INST.MNE = LDA;
+            INST.SUITE = SYM_COUR.val;
+            INTER_INST(INST);
             Test_Symbole(SYM_COUR.CODE, NUM_TOKEN);
             break;
         case LDV:
             // Code for loading value from address
+         
+            INST.MNE = LDV;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case STO:
             // Code for storing value to memory
+          
+            INST.MNE = STO;
+            INTER_INST(INST);
             Sym_Suiv();
             break;
         case BRN:
             // Code for unconditional branch
             Sym_Suiv();
+          
+            INST.MNE = BRN;
+            INST.SUITE = SYM_COUR.val;
+            INTER_INST(INST);
             Test_Symbole(SYM_COUR.CODE, NUM_TOKEN);
             break;
         case BZE:
             // Code for branch if zero
             Sym_Suiv();
+          
+            INST.MNE = BZE;
+            INST.SUITE = SYM_COUR.val;
+            INTER_INST(INST);
             Test_Symbole(SYM_COUR.CODE, NUM_TOKEN);
             break;
 
