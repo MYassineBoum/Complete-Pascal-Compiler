@@ -1,6 +1,6 @@
 program test;
 var x;
 begin
-   for x := 5 to 0 do  
+   for x := 3 to 9 do  
    write(x);
 end.

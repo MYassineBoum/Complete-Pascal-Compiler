@@ -300,6 +300,7 @@ int PC = 0; // Compteur d'instructions
 int opRELOP = 0;
 int opMULOP = 0;
 int opADDOP = 0;
+int opLoop = 0;
 
 // Prototypes des fonctions � utiliser
 void VARS();
@@ -1419,29 +1420,53 @@ void MULOP()
 void POUR()
 {
     Test_Symbole(FOR_TOKEN, FOR_ERR);
-    Test_Symbole(ID_TOKEN, ID_ERR);
-    Test_Symbole(AFF_TOKEN, AFF_ERR);
-
-    //this line was needed
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    
+    AFFEC();
+    
+    
 
     switch (SYM_COUR.CODE)
     {
     case DOWNTO_TOKEN:
         Test_Symbole(DOWNTO_TOKEN, DOWNTO_ERR);
+        opLoop = 1;
         break;
     case INTO_TOKEN:
         Test_Symbole(INTO_TOKEN, INTO_ERR);
+        opLoop = 2;
         break;
     default:
         Erreur(ERREUR_ERR,"POUR");
         break;
     }
 
+    if (opLoop == 1) {
+    	GENERER2(LDI, 1);
+		GENERER1(SUB); 	
+	} 
+	else if (opLoop == 2) {
+		GENERER2(LDI, 1);
+		GENERER1(ADD); 
+	}
+    
+    GENERER2(LDI, SYM_COUR.val);
+    GENERER1(NEQ);
+
     Test_Symbole(NUM_TOKEN, NUM_ERR);
+    
+    
+    GENERER1(BZE);
+    INDICE_BZE = PC;
+    
     Test_Symbole(DO_TOKEN, DO_ERR);
     INST();
+    
+    GENERER2(BRN, LABEL_BRN);
+    PCODE[INDICE_BZE].SUITE = PC + 1;
 }
+
+
+
 
 /*
 REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN*/

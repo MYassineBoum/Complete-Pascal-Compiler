@@ -1,2 +1,11 @@
 ADD 
+LDA 	 0 
+LDI 	 3 
+STO 
+LDI 	 1 
+ADD 
+LDI 	 9 
+NEQ 
+BZE 	 11 
 PRN 
+BRN 	 0 
