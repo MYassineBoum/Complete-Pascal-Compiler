@@ -1,9 +1,0 @@
-INT 2
-ADD 
-LDA 	 0 
-LDI 	 2 
-LDI 	 4 
-ADD 
-STO 
-PRN 
-HLT

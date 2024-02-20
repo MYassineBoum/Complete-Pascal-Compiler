@@ -937,6 +937,7 @@ void PROGRAM()
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(PV_TOKEN, PV_ERR);
     BLOCK();
+    GENERER1 (HLT) ;
     Test_Symbole(PT_TOKEN, PT_ERR);
 }
 
@@ -947,6 +948,9 @@ void BLOCK()
     current_region = RVAR;
     VARS();
     current_region = RBEGIN;
+    PCODE[0].MNE=INT;
+    PCODE[0].SUITE=2;
+
     INSTS();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1516,7 +1520,7 @@ void SavePCodeToFile(FILE *FICH_SORTIE)
 int main()
 {
     FILE *FICH_SORTIE;
-    FICH_SORTIE = fopen("fichierSortie.op", "w+");
+    FICH_SORTIE = fopen("pcode.txt", "w");
     fichier = fopen("program.p", "r");
     if (fichier == NULL)
     {

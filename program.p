@@ -1,8 +1,7 @@
 program test;
+const tata=12;
 var x;
 begin
-   x:=2+4;
-   write(x);
+   x:=tata;
+   write(x)
 end.
-
-
