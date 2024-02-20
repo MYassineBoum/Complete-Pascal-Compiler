@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Lenovo/Desktop/Complete-Pascal-Compiler",
-      "program": "c:/Users/Lenovo/Desktop/Complete-Pascal-Compiler/build/Debug/outDebug",
+      "cwd": "d:/Complete-Pascal-Compiler-1",
+      "program": "d:/Complete-Pascal-Compiler-1/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
