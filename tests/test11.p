@@ -1,7 +1,7 @@
 program test;
 var x;
 begin
-   for x=5 downto 0 do  
+   for x:=5 downto 0 do  
 	  write(x);
 end.
 

@@ -339,6 +339,9 @@ void GENERER2(MNEMONIQUES M, int A);
 void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i);
 void INTER_PCODE();
 void INTER_INST(INSTRUCTION INST);
+void INTER_PCODE();
+void INTER_INST(INSTRUCTION INST);
+
 
 // Definition des fonctions � utiliser
 
@@ -859,6 +862,14 @@ void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void INTER_PCODE(){
+	PC=0;
+	while (PCODE[PC].MNE!=HLT)
+		INTER_INST(PCODE[PC]);
+}
+
 void INTER_INST(INSTRUCTION INST)
 {
     int val1, adr, val2;
@@ -899,6 +910,34 @@ void INTER_INST(INSTRUCTION INST)
         MEM[++SP] = (val1 <= val2);
         PC++;
         break;
+    case GEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 >= val2);
+        PC++;
+        break;
+    case LSS:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 < val2);
+        PC++;
+        break;
+    case GTR:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 > val2);
+        PC++;
+        break;
+    case NEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 != val2);
+        PC++;
+        break;
+    case INN:
+        scanf("%d", MEM[SP--]);
+        PC++;
+        break;
     case BZE:
         if (MEM[SP--] == 0)
             PC = INST.SUITE;
@@ -908,14 +947,47 @@ void INTER_INST(INSTRUCTION INST)
     case BRN:
         PC = INST.SUITE;
         break;
-    }
-}
+    case HLT:
+        PC++;
+        break;
+    case ADD:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 + val2;
+        PC++;
+        break;
+    case SUB:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 - val2;
+        PC++;
+        break;
+    case MUL:   
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 * val2;
+        PC++;
+        break;
+    case DIV:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 / val2;
+        PC++;
+        break;
+    case PRN:
+        printf("%d\n", MEM[SP--]);
+        PC++;
+        break;
+    } 
 
-void INTER_PCODE()
-{
-    PC = 0;
-    while (PCODE[PC].MNE != HLT)
-        INTER_INST(PCODE[PC]);
+//    printf("%d\n", INST.MNE);
+//    int i;
+//    for (i = 0; i < SP; i++)
+//    {
+//         printf("%d\n", MEM[i]);
+//    }
+//    
+//    printf("\n\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -937,6 +1009,7 @@ void PROGRAM()
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(PV_TOKEN, PV_ERR);
     BLOCK();
+    GENERER1 (HLT) ;
     Test_Symbole(PT_TOKEN, PT_ERR);
 }
 
@@ -947,6 +1020,9 @@ void BLOCK()
     current_region = RVAR;
     VARS();
     current_region = RBEGIN;
+    PCODE[0].MNE=INT;
+    PCODE[0].SUITE=2;
+
     INSTS();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1128,14 +1204,30 @@ void INST()
 
 void AFFEC()
 {
-
-    // D�finir une nouvelle variable en m�moire
-    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
-    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
-
-    // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
-    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+	int i;
+	int exists = 0;
+	for (i = 0; i < TABLEINDEX; i++)
+    {
+        if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
+        {
+        	// Empiler l'adresse de la constante ou de la variable trouv�e
+        	GENERER2(LDA, TABLESYM[i].ADRESSE);
+            exists = 1;
+            break;
+        }
+    }
+    
+    if (exists == 0) {
+    	// D�finir une nouvelle variable en m�moire
+	    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+	    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+	    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+	    // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
+    	GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+	}
+	
+	// Remplace cette adresse par sa valeur
+    //GENERER1(LDV);
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
@@ -1310,12 +1402,13 @@ void TERM()
 
 void FACT()
 {
+	// It�rer sur la table des symboles pour trouver une correspondance des noms
+    int i;
     switch (SYM_COUR.CODE)
     {
     case ID_TOKEN:
-        // It�rer sur la table des symboles pour trouver une correspondance des noms
-        int i;
-        for (int i = 0; i < IND_DER_SYM_ACC; i++)
+        
+        for (i = 0; i < TABLEINDEX; i++)
         {
             if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
             {
@@ -1417,22 +1510,42 @@ void MULOP()
     }
 }
 
+
+
+
 void POUR()
 {
     Test_Symbole(FOR_TOKEN, FOR_ERR);
     
-    AFFEC();
-    
-    
+    // D�finir une nouvelle variable en m�moire
+    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
 
+    // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
+    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+
+    // ID := EXPR
+    Test_Symbole(ID_TOKEN, ID_ERR);
+    if (TVAR != lastType)
+    {
+        printf("%s ----> Erreur:  Une constante ne peut changer de valeur dans le programme.", lastIdToken);
+        exit(EXIT_FAILURE);
+    }
+    Test_Symbole(AFF_TOKEN, AFF_ERR);
+
+    Test_Symbole(NUM_ERR, NUM_ERR);
+    GENERER2(LDI, SYM_COUR.val);
+    GENERER1(STO);
+    
     switch (SYM_COUR.CODE)
     {
     case DOWNTO_TOKEN:
-        Test_Symbole(DOWNTO_TOKEN, DOWNTO_ERR);
+        Sym_Suiv();
         opLoop = 1;
         break;
     case INTO_TOKEN:
-        Test_Symbole(INTO_TOKEN, INTO_ERR);
+        Sym_Suiv();
         opLoop = 2;
         break;
     default:
@@ -1441,19 +1554,18 @@ void POUR()
     }
 
     if (opLoop == 1) {
-    	GENERER2(LDI, 1);
-		GENERER1(SUB); 	
-	} 
-	else if (opLoop == 2) {
-		GENERER2(LDI, 1);
-		GENERER1(ADD); 
+		GENERER1(ADD); 	
+	} else if (opLoop == 2) {
+		GENERER1(SUB); 
 	}
+
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
+
+    
+	
     
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(NEQ);
-
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
-    
     
     GENERER1(BZE);
     INDICE_BZE = PC;
@@ -1516,7 +1628,7 @@ void SavePCodeToFile(FILE *FICH_SORTIE)
 int main()
 {
     FILE *FICH_SORTIE;
-    FICH_SORTIE = fopen("fichierSortie.op", "w+");
+    FICH_SORTIE = fopen("pcode.txt", "w");
     fichier = fopen("program.p", "r");
     if (fichier == NULL)
     {
@@ -1538,6 +1650,8 @@ int main()
     PROGRAM();
 
     printf("Execution du programme faite.\n");
+    
+    INTER_PCODE();
 
     
     SavePCodeToFile(FICH_SORTIE);

@@ -1,11 +1,8 @@
-ADD 
+INT 	 2 
 LDA 	 0 
-LDI 	 3 
-STO 
-LDI 	 1 
+LDI 	 2 
+LDI 	 4 
 ADD 
-LDI 	 9 
-NEQ 
-BZE 	 11 
+STO 
 PRN 
-BRN 	 0 
+HLT 

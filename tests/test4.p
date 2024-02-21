@@ -1,6 +1,6 @@
 program test;
 const tata=12;
-var x,tata;
+var x;
 begin
    titi:=tata;
 end.
