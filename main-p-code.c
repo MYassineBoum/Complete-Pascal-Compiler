@@ -1520,10 +1520,11 @@ void POUR()
     // Dï¿½finir une nouvelle variable en mï¿½moire
     strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
-
+    int offset = ++OFFSET;
+    TABLESYM[IND_DER_SYM_ACC].ADRESSE = offset;
+	
     // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
-    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+    GENERER2(LDA, offset);
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
@@ -1533,10 +1534,12 @@ void POUR()
         exit(EXIT_FAILURE);
     }
     Test_Symbole(AFF_TOKEN, AFF_ERR);
-
-    Test_Symbole(NUM_ERR, NUM_ERR);
-    GENERER2(LDI, SYM_COUR.val);
+	
+	// Stockage de la valeur initiale
+	GENERER2(LDI, SYM_COUR.val);
     GENERER1(STO);
+    
+    Test_Symbole(NUM_ERR, NUM_ERR);
     
     switch (SYM_COUR.CODE)
     {
@@ -1552,33 +1555,48 @@ void POUR()
         Erreur(ERREUR_ERR,"POUR");
         break;
     }
-
-    if (opLoop == 1) {
+    
+    LABEL_BRN = PC + 1;
+    
+    GENERER2(LDA, offset);
+    GENERER1(LDV);
+	GENERER2(LDI, SYM_COUR.val);
+	if (opLoop == 1) {
+    	GENERER2(LDI, -1);
 		GENERER1(ADD); 	
 	} else if (opLoop == 2) {
-		GENERER1(SUB); 
+		GENERER2(LDI, 1);
+		GENERER1(ADD); 
 	}
-
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-    
-	
-    
-    GENERER2(LDI, SYM_COUR.val);
     GENERER1(NEQ);
+    
+    Test_Symbole(NUM_TOKEN, NUM_ERR);
     
     GENERER1(BZE);
     INDICE_BZE = PC;
     
     Test_Symbole(DO_TOKEN, DO_ERR);
+    
     INST();
+    
+    GENERER2(LDA, offset);
+    GENERER2(LDA, offset); // Double LDA car LDV écrase l'adresse et le remplace par sa valeur
+    GENERER1(LDV);
+    //GENERER2(LDI, 1);
+
+    if (opLoop == 1) {
+    	GENERER2(LDI, -1);
+		GENERER1(ADD); 	
+	} else if (opLoop == 2) {
+		GENERER2(LDI, 1);
+		GENERER1(ADD); 
+	}
+	
+	GENERER1(STO);
     
     GENERER2(BRN, LABEL_BRN);
     PCODE[INDICE_BZE].SUITE = PC + 1;
 }
-
-
-
 
 /*
 REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN*/

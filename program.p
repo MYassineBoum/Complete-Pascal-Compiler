@@ -1,10 +1,6 @@
 program test;
 var x;
 begin
-   x:=0;
-   while x<=6 do 
-	begin 
-	  x:=x+1;
-        end;
-   write(x);
+   for x:=5 downto 0 do
+	write(x);
 end.
