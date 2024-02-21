@@ -5,7 +5,7 @@ const
 var 
     x: integer;
 begin
-    x := tata;
+    x := tata, titi;
     write(x);
 end.
 

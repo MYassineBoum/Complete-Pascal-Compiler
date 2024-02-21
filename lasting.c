@@ -60,6 +60,10 @@ typedef enum
     STRING_DATA_TOKEN,
     ARRAY_DATA_TOKEN,
     ERROR_TOKEN,
+    QMARK_TOKEN,
+    SQUARE_BRACKET_OPEN_TOKEN,
+    SQUARE_BRACKET_CLOSE_TOKEN,
+    ECRIRE_LN_TOKEN,
 } CODES_LEX;
 
 // erreur types
@@ -117,7 +121,11 @@ typedef enum
     FLOAT_DATA_ERR,
     BOOLEAN_DATA_ERR,
     STRING_DATA_ERR,
-    ARRAY_DATA_ERR
+    ARRAY_DATA_ERR,
+    QMARK_ERR,
+    SQUARE_BRACKET_OPEN_ERR,
+    SQUARE_BRACKET_CLOSE_ERR,
+    ECRIRE_LN_ERR,
 } CODES_ERR;
 
 int LOOP_LOGIC = 0;
@@ -244,7 +252,7 @@ int isReadActivated = 0;
 typedef struct
 {
     CODES_LEX CODE;
-    char NOM[20];
+    char NOM[255];
     int val;
 } TSym_Cour;
 
@@ -258,8 +266,16 @@ char Car_Cour; // caract�re courant
 typedef enum
 {
     TPROG,
-    TCONST,
-    TVAR
+    T_INTEGER_CONST,
+    T_INTEGER_VAR,
+    T_FLOAT_CONST,
+    T_FLOAT_VAR,
+    T_BOOLEAN_CONST,
+    T_BOOLEAN_VAR,
+    T_STRING_CONST,
+    T_STRING_VAR,
+    T_ARRAY_CONST,
+    T_ARRAY_VAR
 } TSYM;
 
 typedef struct
@@ -368,6 +384,7 @@ void BLOCK();
 void CONSTS();
 void Sym_Suiv();
 void lire_mot();
+void lire_string();
 void lire_nombre();
 void CAS();
 void POUR();
@@ -385,6 +402,35 @@ void INTER_PCODE();
 void INTER_INST(INSTRUCTION INST);
 
 // Definition des fonctions � utiliser
+
+void lire_string()
+{
+
+    // taile de la chaine
+    char mot[255];
+    int indice = 0;
+
+    // Lecture du premier caract�re (lettre)
+    mot[indice++] = Car_Cour;
+    Lire_Car();
+
+    // Lecture des caract�res suivants (lettres ou chiffres)
+
+    while (Car_Cour != '"')
+    {
+        mot[indice++] = Car_Cour;
+        Lire_Car();
+    }
+
+    // Ajout du caract�re de fin de cha�ne
+    mot[indice] = '\0';
+
+    SYM_COUR.CODE = STRING_DATA_TOKEN;
+
+    // Stockage du mot dans le jeton
+    strcpy(SYM_COUR.NOM, mot);
+    // printf("STRING 2: %s\n", SYM_COUR.NOM);
+}
 
 void lire_mot()
 {
@@ -450,6 +496,10 @@ void lire_mot()
     else if (stricmp(mot, "write") == 0)
     {
         SYM_COUR.CODE = WRITE_TOKEN;
+    }
+    else if (stricmp(mot, "writeln") == 0)
+    {
+        SYM_COUR.CODE = ECRIRE_LN_TOKEN;
     }
     else if (stricmp(mot, "else") == 0)
     {
@@ -619,21 +669,42 @@ void TYPE(int isIntitlized)
         Sym_Suiv();
         if (isIntitlized)
         {
+            Test_Symbole(EG_TOKEN, EG_ERR);
             Test_Symbole(BOOLEAN_DATA_TOKEN, BOOLEAN_DATA_ERR);
+            Test_Symbole(PV_TOKEN, PV_ERR);
         }
         break;
     case STRING_TOKEN:
         Sym_Suiv();
+
         if (isIntitlized)
         {
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            lire_string();
             Test_Symbole(STRING_DATA_TOKEN, STRING_DATA_ERR);
+
+            Test_Symbole(QMARK_TOKEN, QMARK_ERR);
+            Test_Symbole(PV_TOKEN, PV_ERR);
         }
         break;
     case ARRAY_TOKEN:
         Sym_Suiv();
         if (isIntitlized)
         {
-            Test_Symbole(ARRAY_DATA_TOKEN, ARRAY_DATA_ERR);
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            Test_Symbole(SQUARE_BRACKET_OPEN_TOKEN, SQUARE_BRACKET_OPEN_ERR);
+            Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
+            while (SYM_COUR.CODE == VIR_TOKEN)
+            {
+                Sym_Suiv();
+                Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
+            }
+            Test_Symbole(SQUARE_BRACKET_CLOSE_TOKEN, SQUARE_BRACKET_CLOSE_ERR);
+            
+            //Test_Symbole(ARRAY_DATA_TOKEN, ARRAY_DATA_ERR);
+            Test_Symbole(PV_TOKEN, PV_ERR);
         }
         break;
 
@@ -703,7 +774,7 @@ void Check()
         else
         {
             strcpy(TAB_IDFS[k].NOM, SYM_COUR.NOM);
-            TAB_IDFS[k].TIDF = TCONST;
+            TAB_IDFS[k].TIDF = T_INTEGER_CONST;
             k++;
         }
 
@@ -734,7 +805,7 @@ void Check()
         else
         {
             strcpy(TAB_IDFS[k].NOM, SYM_COUR.NOM);
-            TAB_IDFS[k].TIDF = TVAR;
+            TAB_IDFS[k].TIDF = T_INTEGER_VAR;
             k++;
         }
 
@@ -765,7 +836,7 @@ void Check()
         if (isReadActivated)
         {
             isReadActivated = 0;
-            if (TCONST == TAB_IDFS[i].TIDF)
+            if (T_INTEGER_CONST == TAB_IDFS[i].TIDF)
             {
                 printf("%s ----> Erreur:  Une constante ne peut changer de valeur dans le programme.", SYM_COUR.NOM);
                 exit(EXIT_FAILURE);
@@ -803,6 +874,25 @@ void Sym_Suiv()
     {
         switch (Car_Cour)
         {
+        case '#':
+            Lire_Car();
+            while (Car_Cour != '\n')
+            {
+                Lire_Car();
+            }
+            Lire_Car();
+            Sym_Suiv();
+            break;
+        case '$':
+            Lire_Car();
+            while (Car_Cour != '$')
+            {
+                Lire_Car();
+            }
+            Lire_Car();
+            Sym_Suiv();
+            break;
+            
         case ';':
             SYM_COUR.CODE = PV_TOKEN;
             Lire_Car();
@@ -893,6 +983,18 @@ void Sym_Suiv()
 
         case '.':
             SYM_COUR.CODE = PT_TOKEN;
+            Lire_Car();
+            break;
+        case '"':
+            SYM_COUR.CODE = QMARK_TOKEN;
+            Lire_Car();
+            break;
+        case '[':
+            SYM_COUR.CODE = SQUARE_BRACKET_OPEN_TOKEN;
+            Lire_Car();
+            break;
+        case ']':
+            SYM_COUR.CODE = SQUARE_BRACKET_CLOSE_TOKEN;
             Lire_Car();
             break;
 
@@ -1337,6 +1439,7 @@ void INST()
     case WHILE_TOKEN:
         TANTQUE();
         break;
+    case ECRIRE_LN_TOKEN:   
     case WRITE_TOKEN:
         ECRIRE();
         break;
@@ -1390,7 +1493,7 @@ void AFFEC()
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
-    if (TVAR != lastType)
+    if (T_INTEGER_VAR != lastType)
     {
         printf("%s ----> Erreur:  Une constante ne peut changer de valeur dans le programme.", lastIdToken);
         exit(EXIT_FAILURE);
@@ -1435,7 +1538,7 @@ void TANTQUE()
 
 void ECRIRE()
 {
-    Test_Symbole(WRITE_TOKEN, WRITE_ERR);
+    Sym_Suiv();
     Test_Symbole(PO_TOKEN, PO_ERR);
     EXPR();
     GENERER1(PRN);
@@ -1777,7 +1880,7 @@ void POUR()
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
-    if (TVAR != lastType)
+    if (T_INTEGER_VAR != lastType)
     {
         printf("%s ----> Erreur:  Une constante ne peut changer de valeur dans le programme.", lastIdToken);
         exit(EXIT_FAILURE);
@@ -1910,7 +2013,7 @@ int main()
 {
     FILE *FICH_SORTIE;
     FICH_SORTIE = fopen("pcode.txt", "w");
-    fichier = fopen("program.p", "r");
+    fichier = fopen("tests/test12.p", "r");
     if (fichier == NULL)
     {
         perror("Erreur lors de l'ouverture du fichier!");

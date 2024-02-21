@@ -1,15 +1,7 @@
 program test;
-var y,z,t;
+const tata=12; titi=123;
+var x;
 begin
-
-
-   read(z);
-   read(t);
-   read(y);
-  
-write(z);
-write(t);
-write(y);
-   
- 
+   x:=tata+titi;
+   write(x);
 end.

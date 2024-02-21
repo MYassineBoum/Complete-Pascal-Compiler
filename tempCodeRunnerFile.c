@@ -1,1 +1,1 @@
-FACT
+writeln

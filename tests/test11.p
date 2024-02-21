@@ -1,5 +1,5 @@
 program test;
-var x;
+var x:integer;
 begin
    for x:=5 downto 0 do  
 	  write(x);

@@ -1,6 +1,6 @@
 program test;
-const tata=12;
-var x,titi;
+const tata:integer=12;
+var x:integer,titi:integer;
 begin
    titi:=test;
 end.

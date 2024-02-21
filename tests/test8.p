@@ -1,6 +1,6 @@
 program test;
-const tata=12;
-var x;
+const tata:integer=12;
+var x:integer;
 begin
    x:=0;
    while x<=tata do 
