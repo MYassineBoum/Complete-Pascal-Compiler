@@ -1252,10 +1252,14 @@ void SI()
     IND_BZE = PC;
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
+    GENERER1(BRN);
+    INDICE_BZE = PC;
     PCODE[IND_BZE].SUITE = PC + 1;
     if (SYM_COUR.CODE == ELSE_TOKEN)
     {
+    	Sym_Suiv();
         INST();
+        PCODE[INDICE_BZE].SUITE = PC + 1;
     }
 }
 

@@ -1,0 +1,16 @@
+INT 	 2 
+LDA 	 0 
+LDI 	 1 
+STO 
+LDA 	 0 
+LDV 
+LDI 	 2 
+LEQ 
+BZE 	 13 
+LDA 	 0 
+LDV 
+PRN 
+BRN 	 15 
+LDI 	 4 
+PRN 
+HLT 

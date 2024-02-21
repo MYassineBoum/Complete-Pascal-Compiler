@@ -1,6 +1,7 @@
 program test;
 var x;
 begin
-   x:=0;
-   repeat x:=x+1; until x=5
+   x:=1;
+   if x<=2 then write(x)
+   else write(4);
 end.
