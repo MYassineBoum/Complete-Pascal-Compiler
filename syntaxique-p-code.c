@@ -224,19 +224,19 @@ void INTER_INST(INSTRUCTION INST)
         PC++;
         break;
     case PRN:
-        printf("%d\n", MEM[SP--]);
+        printf("Res %d\n", MEM[SP--]);
         PC++;
         break;
     } 
 
-    // printf("%d\n", INST.MNE);
-
-    // for (int i = 0; i < SP; i++)
-    // {
-    //     printf("%d ", MEM[i]);
-    // }
-    
-    // printf("\n\n");
+//    printf("%d\n", INST.MNE);
+    int i;
+    for (i = 0; i < SP; i++)
+    {
+         printf("%d\n", MEM[i]);
+    }
+//    
+//    printf("\n\n");
 }
 
 
@@ -435,6 +435,7 @@ void PCODE()
     INST_PCODE();
     Test_Symbole(HLT, HLT_ERR);
 }
+
 
 void INST_PCODE()
 {
