@@ -1,8 +1,15 @@
 program test;
-var x;
+var y,z,t;
 begin
-   for x:=5 downto 0 do  
-	  write(x);
+
+
+   read(z);
+   read(t);
+   read(y);
+  
+write(z);
+write(t);
+write(y);
+   
+ 
 end.
-
-

@@ -7,6 +7,8 @@
 #define TAILLEMEM 100
 #define TAILLECODE 100
 
+int numberOfTokens = 0;
+
 typedef enum
 {
     ID_TOKEN,
@@ -37,7 +39,6 @@ typedef enum
     PO_TOKEN,
     PF_TOKEN,
     FIN_TOKEN,
-    NUM_TOKEN,
     ERREUR_TOKEN,
     EOF_TOKEN,
     EG_TOKEN,
@@ -50,12 +51,16 @@ typedef enum
     INTO_TOKEN,
     DOWNTO_TOKEN,
     DDOT_TOKEN,
-
     INTEGER_TOKEN,
-    REAL_TOKEN,
+    FLOAT_TOKEN,
     BOOLEAN_TOKEN,
     STRING_TOKEN,
     ARRAY_TOKEN,
+    INTEGER_DATA_TOKEN,
+    FLOAT_DATA_TOKEN,
+    BOOLEAN_DATA_TOKEN,
+    STRING_DATA_TOKEN,
+    ARRAY_DATA_TOKEN
 } CODES_LEX;
 
 // erreur types
@@ -89,7 +94,6 @@ typedef enum
     PO_ERR,
     PF_ERR,
     FIN_ERR,
-    NUM_ERR,
     ERREUR_ERR,
     EOF_ERR,
     EG_ERR,
@@ -105,12 +109,16 @@ typedef enum
     DOWNTO_ERR,
     DDOT_ERR,
     INST_PCODE_ERR,
-
     INTEGER_ERR,
-    REAL_ERR,
+    FLOAT_ERR,
     BOOLEAN_ERR,
     STRING_ERR,
     ARRAY_ERR,
+    INTEGER_DATA_ERR,
+    FLOAT_DATA_ERR,
+    BOOLEAN_DATA_ERR,
+    STRING_DATA_ERR,
+    ARRAY_DATA_ERR
 } CODES_ERR;
 
 const char *getErrorMessage(CODES_ERR error_code);
@@ -175,7 +183,7 @@ const char *getErrorMessage(CODES_ERR error_code)
         return "Closing parenthesis error";
     case FIN_ERR:
         return "End of file error";
-    case NUM_ERR:
+    case INTEGER_DATA_ERR:
         return "Number format error";
     case ERREUR_ERR:
         return "General error";
@@ -341,6 +349,7 @@ void lire_mot();
 void lire_nombre();
 void CAS();
 void POUR();
+void TYPE();
 void REPETER();
 
 void Check();
@@ -455,6 +464,36 @@ void lire_mot()
     {
         SYM_COUR.CODE = DOWNTO_TOKEN;
     }
+    else if (stricmp(mot, "integer") == 0)
+    {
+        SYM_COUR.CODE = INTEGER_TOKEN;
+    }
+    else if (stricmp(mot, "float") == 0)
+    {
+        SYM_COUR.CODE = FLOAT_TOKEN; // 1
+    }
+    else if (stricmp(mot, "boolean") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_TOKEN; // 2
+    }
+    else if (stricmp(mot, "string") == 0)
+    {
+        SYM_COUR.CODE = STRING_TOKEN; // 3
+    }
+    else if (stricmp(mot, "array") == 0)
+    {
+        SYM_COUR.CODE = ARRAY_TOKEN; // 4
+    }
+    else if (stricmp(mot, "true") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_DATA_TOKEN;
+        SYM_COUR.val = 1;
+    }
+    else if (stricmp(mot, "false") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_DATA_TOKEN;
+        SYM_COUR.val = 0;
+    }
     else
     {
         // Si ce n'est pas un mot-cl�, c'est un identifiant
@@ -479,25 +518,39 @@ void lire_nombre()
 {
     char nombre[11];
     int indice = 0;
+    int isFloat = 0; // Variable pour indiquer si le nombre est un flottant
 
     // Lecture du premier chiffre
     nombre[indice++] = Car_Cour;
     Lire_Car();
 
     // Lecture des chiffres suivants
-    while (isdigit(Car_Cour))
+    while (isdigit(Car_Cour) || Car_Cour == '.')
     {
+        if (Car_Cour == '.')
+        {
+            isFloat = 1; // Le nombre contient un point, donc c'est un flottant
+        }
         nombre[indice++] = Car_Cour;
         Lire_Car();
     }
 
-    // Ajout du caract�re de fin de cha�ne
+    // Ajout du caractère de fin de chaîne
     nombre[indice] = '\0';
 
     // Stockage du nombre dans le jeton
-    SYM_COUR.CODE = NUM_TOKEN;
+    if (isFloat)
+    {
+        SYM_COUR.CODE = FLOAT_DATA_TOKEN;
+        SYM_COUR.val = atof(nombre);
+    }
+    else
+    {
+        SYM_COUR.CODE = INTEGER_DATA_TOKEN;
+        SYM_COUR.val = atoi(nombre);
+    }
+
     strcpy(SYM_COUR.NOM, nombre);
-    SYM_COUR.val = atoi(SYM_COUR.NOM);
 }
 
 void Check()
@@ -770,7 +823,7 @@ void Sym_Suiv()
 void Erreur(CODES_ERR code, char *origin)
 {
     // printf("Syntaxic error\n");
-    printf("Syntaxic error: %s  + origin: %s\n", getErrorMessage(code), origin);
+    printf("Syntaxic Error\n-erreur: %s\n-origin: %s\n-token number: %d\n", getErrorMessage(code), origin, numberOfTokens);
     // printf("Current Token: %d\n", SYM_COUR.CODE);
     // printf("Current Lexeme: %s\n", SYM_COUR.NOM);
     exit(EXIT_FAILURE);
@@ -932,6 +985,10 @@ void INTER_PCODE()
 
 void Test_Symbole(CODES_LEX cl, CODES_ERR COD_ERR)
 {
+    numberOfTokens++;
+
+    // printf("Lexeme: %s\n", SYM_COUR.NOM);
+
     if (SYM_COUR.CODE == cl)
     {
         Sym_Suiv();
@@ -949,6 +1006,73 @@ void PROGRAM()
     BLOCK();
     GENERER1(HLT);
     Test_Symbole(PT_TOKEN, PT_ERR);
+}
+
+void TYPE(int isIntitlized)
+{
+    Test_Symbole(DDOT_TOKEN, DDOT_ERR);
+    switch (SYM_COUR.CODE)
+    {
+    case FLOAT_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            // Empiler la valeur lue (correspond a NUM_TOKEN)
+            GENERER2(LDI, SYM_COUR.val);
+            GENERER1(STO);
+
+            IND_DER_SYM_ACC++;
+
+            Test_Symbole(FLOAT_DATA_TOKEN, FLOAT_DATA_ERR);
+
+            Test_Symbole(PV_TOKEN, PV_ERR);
+        }
+        break;
+    case INTEGER_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            // Empiler la valeur lue (correspond a NUM_TOKEN)
+            GENERER2(LDI, SYM_COUR.val);
+            GENERER1(STO);
+
+            IND_DER_SYM_ACC++;
+
+            Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
+
+            Test_Symbole(PV_TOKEN, PV_ERR);
+        }
+        break;
+    case BOOLEAN_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(BOOLEAN_DATA_TOKEN, BOOLEAN_DATA_ERR);
+        }
+        break;
+    case STRING_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(STRING_DATA_TOKEN, STRING_DATA_ERR);
+        }
+        break;
+    case ARRAY_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(ARRAY_DATA_TOKEN, ARRAY_DATA_ERR);
+        }
+        break;
+
+    default:
+        Erreur(VAR_BEGIN_ERR, "VARS");
+        break;
+    }
 }
 
 void BLOCK()
@@ -979,17 +1103,9 @@ void CONSTS()
         GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
 
         Test_Symbole(ID_TOKEN, ID_ERR);
-        Test_Symbole(EG_TOKEN, EG_ERR);
 
-        // Empiler la valeur lue (correspond a NUM_TOKEN)
-        GENERER2(LDI, SYM_COUR.val);
-        GENERER1(STO);
+        TYPE(1);
 
-        Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-        IND_DER_SYM_ACC++;
-
-        Test_Symbole(PV_TOKEN, PV_ERR);
         while (SYM_COUR.CODE == ID_TOKEN)
         {
             // Definir une nouvelle constante en memoire
@@ -1000,17 +1116,7 @@ void CONSTS()
 
             Sym_Suiv();
 
-            Test_Symbole(EG_TOKEN, EG_ERR);
-
-            // Empiler la valeur lue (correspon a NUM_TOKEN)
-            GENERER2(LDI, SYM_COUR.val);
-            GENERER1(STO);
-
-            Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-            IND_DER_SYM_ACC++;
-
-            Test_Symbole(PV_TOKEN, PV_ERR);
+            TYPE(1);
         };
         break;
     case VAR_TOKEN:
@@ -1053,11 +1159,13 @@ void VARS()
     case VAR_TOKEN:
         Sym_Suiv();
         Test_Symbole(ID_TOKEN, ID_ERR);
+        TYPE(0);
 
         while (SYM_COUR.CODE == VIR_TOKEN)
         {
             Sym_Suiv();
             Test_Symbole(ID_TOKEN, ID_ERR);
+            TYPE(0);
         }
 
         Test_Symbole(PV_TOKEN, PV_ERR);
@@ -1247,32 +1355,40 @@ void LIRE()
 
 void COND()
 {
-    EXPR();
-    RELOP();
-    EXPR();
-    switch (opRELOP)
+    if (SYM_COUR.CODE == BOOLEAN_DATA_TOKEN)
     {
-    case 1:
-        GENERER1(EQL);
-        break;
-    case 2:
-        GENERER1(NEQ);
-        break;
-    case 3:
-        GENERER1(LSS);
-        break;
-    case 4:
-        GENERER1(GTR);
-        break;
-    case 5:
-        GENERER1(LEQ);
-        break;
-    case 6:
-        GENERER1(GEQ);
-        break;
-    default:
-        Erreur(ERREUR_ERR, "COND");
-        break;
+        GENERER2(LDI, SYM_COUR.val);
+        Sym_Suiv();
+    }
+    else
+    {
+        EXPR();
+        RELOP();
+        EXPR();
+        switch (opRELOP)
+        {
+        case 1:
+            GENERER1(EQL);
+            break;
+        case 2:
+            GENERER1(NEQ);
+            break;
+        case 3:
+            GENERER1(LSS);
+            break;
+        case 4:
+            GENERER1(GTR);
+            break;
+        case 5:
+            GENERER1(LEQ);
+            break;
+        case 6:
+            GENERER1(GEQ);
+            break;
+        default:
+            Erreur(ERREUR_ERR, "COND");
+            break;
+        }
     }
 }
 
@@ -1344,11 +1460,11 @@ void FACT()
         Test_Symbole(ID_TOKEN, ID_ERR);
 
         break;
-    case NUM_TOKEN:
+    case INTEGER_DATA_TOKEN:
         // Empiler la valeur trouv�e
         GENERER2(LDI, SYM_COUR.val);
 
-        Test_Symbole(NUM_TOKEN, NUM_ERR);
+        Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
         break;
     case PO_TOKEN:
         Test_Symbole(PO_TOKEN, PO_ERR);
@@ -1452,7 +1568,7 @@ void POUR()
     }
     Test_Symbole(AFF_TOKEN, AFF_ERR);
 
-    Test_Symbole(NUM_ERR, NUM_ERR);
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(STO);
 
@@ -1480,7 +1596,7 @@ void POUR()
         GENERER1(SUB);
     }
 
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
 
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(NEQ);
@@ -1511,10 +1627,11 @@ void CAS()
     Test_Symbole(CASE_TOKEN, CASE_ERR);
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(OF_TOKEN, OF_TOKEN);
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
+
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
     Test_Symbole(DDOT_TOKEN, DDOT_ERR);
     INST();
-    while (SYM_COUR.CODE == NUM_TOKEN)
+    while (SYM_COUR.CODE == INTEGER_DATA_TOKEN)
     {
         Sym_Suiv();
         Test_Symbole(DDOT_TOKEN, DDOT_ERR);

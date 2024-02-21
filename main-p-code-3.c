@@ -49,13 +49,7 @@ typedef enum
     OF_TOKEN,
     INTO_TOKEN,
     DOWNTO_TOKEN,
-    DDOT_TOKEN,
-
-    INTEGER_TOKEN,
-    REAL_TOKEN,
-    BOOLEAN_TOKEN,
-    STRING_TOKEN,
-    ARRAY_TOKEN,
+    DDOT_TOKEN
 } CODES_LEX;
 
 // erreur types
@@ -104,14 +98,10 @@ typedef enum
     INTO_ERR,
     DOWNTO_ERR,
     DDOT_ERR,
-    INST_PCODE_ERR,
-
-    INTEGER_ERR,
-    REAL_ERR,
-    BOOLEAN_ERR,
-    STRING_ERR,
-    ARRAY_ERR,
+    INST_PCODE_ERR
 } CODES_ERR;
+
+int LOOP_LOGIC = 0;
 
 const char *getErrorMessage(CODES_ERR error_code);
 
@@ -306,6 +296,7 @@ INSTRUCTION PCODE[TAILLECODE];
 int LABEL_BRN;
 int INDICE_BZE;
 int IND_BZE;
+int INDICE_BRN;
 
 int PC = 0; // Compteur d'instructions
 
@@ -349,6 +340,8 @@ void Check();
 void GENERER1(MNEMONIQUES M);
 void GENERER2(MNEMONIQUES M, int A);
 void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i);
+void INTER_PCODE();
+void INTER_INST(INSTRUCTION INST);
 void INTER_PCODE();
 void INTER_INST(INSTRUCTION INST);
 
@@ -851,6 +844,9 @@ void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i)
     case GTR:
         fprintf(FICH_SORTIE, "%s \n", "GTR");
         break;
+    case EQL:
+        fprintf(FICH_SORTIE, "%s \n", "EQL");
+        break;
     case HLT:
         fprintf(FICH_SORTIE, "%s \n", "HLT");
         break;
@@ -863,10 +859,20 @@ void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i)
     case PRN:
         fprintf(FICH_SORTIE, "%s \n", "PRN");
         break;
+
     default:
         Erreur(INST_PCODE_ERR, "SaveInstToFile");
         break;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void INTER_PCODE()
+{
+    PC = 0;
+    while (PCODE[PC].MNE != HLT)
+        INTER_INST(PCODE[PC]);
 }
 
 void INTER_INST(INSTRUCTION INST)
@@ -909,6 +915,37 @@ void INTER_INST(INSTRUCTION INST)
         MEM[++SP] = (val1 <= val2);
         PC++;
         break;
+    case GEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 >= val2);
+        PC++;
+        break;
+    case LSS:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 < val2);
+        PC++;
+        break;
+    case GTR:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 > val2);
+        PC++;
+        break;
+    case NEQ:
+        val2 = MEM[SP--];
+        val1 = MEM[SP--];
+        MEM[++SP] = (val1 != val2);
+        PC++;
+        break;
+    case INN:
+        scanf("%d", &val1);
+        adr = MEM[SP--];
+        MEM[adr] = val1;
+        PC++;
+        break;
+
     case BZE:
         if (MEM[SP--] == 0)
             PC = INST.SUITE;
@@ -918,14 +955,47 @@ void INTER_INST(INSTRUCTION INST)
     case BRN:
         PC = INST.SUITE;
         break;
+    case HLT:
+        PC++;
+        break;
+    case ADD:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 + val2;
+        PC++;
+        break;
+    case SUB:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 - val2;
+        PC++;
+        break;
+    case MUL:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 * val2;
+        PC++;
+        break;
+    case DIV:
+        val1 = MEM[SP--];
+        val2 = MEM[SP--];
+        MEM[++SP] = val1 / val2;
+        PC++;
+        break;
+    case PRN:
+        printf("%d\n", MEM[SP--]);
+        PC++;
+        break;
     }
-}
 
-void INTER_PCODE()
-{
-    PC = 0;
-    while (PCODE[PC].MNE != HLT)
-        INTER_INST(PCODE[PC]);
+    //    printf("%d\n", INST.MNE);
+    //    int i;
+    //    for (i = 0; i < SP; i++)
+    //    {
+    //         printf("%d\n", MEM[i]);
+    //    }
+    //
+    //    printf("\n\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -949,6 +1019,21 @@ void PROGRAM()
     BLOCK();
     GENERER1(HLT);
     Test_Symbole(PT_TOKEN, PT_ERR);
+
+    // for (int i = 0; i < TABLEINDEX; i++)
+    // {
+    //     if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
+    //     {
+    //         // Empiler l'adresse de la constante ou de la variable trouv�e
+    //         GENERER2(LDA, TABLESYM[i].ADRESSE);
+    //         // Remplace cette adresse par sa valeur
+    //         GENERER1(LDV);
+
+    //         printf("ID: %s\n", SYM_COUR.NOM);
+    //         break;
+    //     }
+    //     printf("ID inside table: %s - %d\n", TABLESYM[i].NOM, TABLESYM[i].CLASSE);
+    // }
 }
 
 void BLOCK()
@@ -1142,14 +1227,35 @@ void INST()
 
 void AFFEC()
 {
+    int i;
+    int exists = 0;
+    for (i = 0; i < TABLEINDEX; i++)
+    {
+        if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
+        {
+            // Empiler l'adresse de la constante ou de la variable trouv�e
+            GENERER2(LDA, TABLESYM[i].ADRESSE);
+            exists = 1;
+            break;
+        }
+    }
 
-    // D�finir une nouvelle variable en m�moire
-    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
-    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
 
-    // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
-    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+    if (!exists)
+    {
+        
+        // D�finir une nouvelle variable en m�moire
+        strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+        TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+        // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
+        GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+
+        IND_DER_SYM_ACC++;
+    }
+
+    // Remplace cette adresse par sa valeur
+    // GENERER1(LDV);
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
@@ -1172,10 +1278,14 @@ void SI()
     IND_BZE = PC;
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
+    GENERER1(BRN);
+    INDICE_BRN = PC;
     PCODE[IND_BZE].SUITE = PC + 1;
     if (SYM_COUR.CODE == ELSE_TOKEN)
     {
+        Sym_Suiv();
         INST();
+        PCODE[INDICE_BRN].SUITE = PC + 1;
     }
 }
 
@@ -1213,13 +1323,32 @@ void LIRE()
     Test_Symbole(READ_TOKEN, READ_ERR);
     Test_Symbole(PO_TOKEN, PO_ERR);
 
-    // D�finir une nouvelle variable en m�moire
-    strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
-    TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+    int i;
+    int exists = 0;
+    for (i = 0; i < TABLEINDEX; i++)
+    {
+        if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
+        {
+            // Empiler l'adresse de la constante ou de la variable trouv�e
+            GENERER2(LDA, TABLESYM[i].ADRESSE);
+            exists = 1;
+            break;
+        }
+    }
 
-    // Charger l'adresse de cette variable au sommet de la pile
-    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+    if (exists == 0)
+    {
+        // D�finir une nouvelle variable en m�moire
+        strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+        TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+
+        // Charger l'adresse de cette variable au sommet de la pile
+        GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+
+        IND_DER_SYM_ACC++;
+    }
+
     // Lecture d'un entier, puis le stocker dans l'adresse du sommet de la pile
     GENERER1(INN);
 
@@ -1229,13 +1358,31 @@ void LIRE()
     {
         Sym_Suiv();
 
-        // D�finir une nouvelle variable en m�moire
-        strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
-        TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-        TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+        int i;
+        int exists = 0;
+        for (i = 0; i < TABLEINDEX; i++)
+        {
+            if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
+            {
+                // Empiler l'adresse de la constante ou de la variable trouv�e
+                GENERER2(LDA, TABLESYM[i].ADRESSE);
+                exists = 1;
+                break;
+            }
+        }
 
-        // Charger l'adresse de cette variable au sommet de la pile
-        GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+        if (exists == 0)
+        {
+            // D�finir une nouvelle variable en m�moire
+            strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
+            TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
+            TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+
+            // Charger l'adresse de cette variable au sommet de la pile
+            GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+
+            IND_DER_SYM_ACC++;
+        }
         // Lecture d'un entier, puis le stocker dans l'adresse du sommet de la pile
         GENERER1(INN);
 
@@ -1253,22 +1400,70 @@ void COND()
     switch (opRELOP)
     {
     case 1:
-        GENERER1(EQL);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(NEQ);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(EQL);
+        }
         break;
     case 2:
-        GENERER1(NEQ);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(EQL);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(NEQ);
+        }
         break;
     case 3:
-        GENERER1(LSS);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(GEQ);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(LSS);
+        }
         break;
     case 4:
-        GENERER1(GTR);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(LEQ);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(GTR);
+        }
         break;
     case 5:
-        GENERER1(LEQ);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(GTR);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(LEQ);
+        }
         break;
     case 6:
-        GENERER1(GEQ);
+        if (LOOP_LOGIC)
+        {
+            GENERER1(LSS);
+            LOOP_LOGIC = 0;
+        }
+        else
+        {
+            GENERER1(GEQ);
+        }
         break;
     default:
         Erreur(ERREUR_ERR, "COND");
@@ -1324,12 +1519,13 @@ void TERM()
 
 void FACT()
 {
+    // It�rer sur la table des symboles pour trouver une correspondance des noms
+    int i;
     switch (SYM_COUR.CODE)
     {
     case ID_TOKEN:
-        // It�rer sur la table des symboles pour trouver une correspondance des noms
-        int i;
-        for (int i = 0; i < IND_DER_SYM_ACC; i++)
+
+        for (i = 0; i < TABLEINDEX; i++)
         {
             if (strcmp(TABLESYM[i].NOM, SYM_COUR.NOM) == 0)
             {
@@ -1337,6 +1533,8 @@ void FACT()
                 GENERER2(LDA, TABLESYM[i].ADRESSE);
                 // Remplace cette adresse par sa valeur
                 GENERER1(LDV);
+
+               // printf("ID: %s\n", SYM_COUR.NOM);
                 break;
             }
         }
@@ -1438,10 +1636,13 @@ void POUR()
     // D�finir une nouvelle variable en m�moire
     strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
     TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
-    TABLESYM[IND_DER_SYM_ACC].ADRESSE = ++OFFSET;
+    int offset = ++OFFSET;
+    TABLESYM[IND_DER_SYM_ACC].ADRESSE = offset;
+
+    IND_DER_SYM_ACC++;
 
     // Empiler l'adresse de cette nouvelle variable pour but d'affectation (Voir FACT())
-    GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
+    GENERER2(LDA, offset);
 
     // ID := EXPR
     Test_Symbole(ID_TOKEN, ID_ERR);
@@ -1452,9 +1653,11 @@ void POUR()
     }
     Test_Symbole(AFF_TOKEN, AFF_ERR);
 
-    Test_Symbole(NUM_ERR, NUM_ERR);
+    // Stockage de la valeur initiale
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(STO);
+
+    Test_Symbole(NUM_ERR, NUM_ERR);
 
     switch (SYM_COUR.CODE)
     {
@@ -1471,39 +1674,71 @@ void POUR()
         break;
     }
 
+    LABEL_BRN = PC + 1;
+
+    GENERER2(LDA, offset);
+    GENERER1(LDV);
+    GENERER2(LDI, SYM_COUR.val);
     if (opLoop == 1)
     {
+        GENERER2(LDI, -1);
         GENERER1(ADD);
     }
     else if (opLoop == 2)
     {
-        GENERER1(SUB);
+        GENERER2(LDI, 1);
+        GENERER1(ADD);
     }
+    GENERER1(NEQ);
 
     Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-    GENERER2(LDI, SYM_COUR.val);
-    GENERER1(NEQ);
 
     GENERER1(BZE);
     INDICE_BZE = PC;
 
     Test_Symbole(DO_TOKEN, DO_ERR);
+
     INST();
 
+    GENERER2(LDA, offset);
+    GENERER2(LDA, offset); // Double LDA car LDV ecrase l'adresse et le remplace par sa valeur
+    GENERER1(LDV);
+    // GENERER2(LDI, 1);
+
+    if (opLoop == 1)
+    {
+        GENERER2(LDI, -1);
+        GENERER1(ADD);
+    }
+    else if (opLoop == 2)
+    {
+        GENERER2(LDI, 1);
+        GENERER1(ADD);
+    }
+    GENERER1(STO);
     GENERER2(BRN, LABEL_BRN);
     PCODE[INDICE_BZE].SUITE = PC + 1;
 }
 
 /*
-REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN*/
+
+REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN
+
+*/
 
 void REPETER()
 {
+    LOOP_LOGIC = 1;
     Test_Symbole(REPEAT_TOKEN, REPEAT_ERR);
+    LABEL_BRN = PC + 1;
     INST();
+    // printf("%d\n", SYM_COUR.CODE);
     Test_Symbole(UNTIL_TOKEN, UNTIL_ERR);
     COND();
+    GENERER1(BZE);
+    INDICE_BZE = PC;
+    GENERER2(BRN, LABEL_BRN);
+    PCODE[INDICE_BZE].SUITE = PC + 1;
 }
 
 void CAS()
@@ -1565,6 +1800,8 @@ int main()
     PROGRAM();
 
     printf("Execution du programme faite.\n");
+
+    INTER_PCODE();
 
     SavePCodeToFile(FICH_SORTIE);
     fclose(FICH_SORTIE);
