@@ -5,7 +5,7 @@ STO
 LDA 	 0 
 LDV 
 LDI 	 2 
-LEQ 
+GEQ 
 BZE 	 13 
 LDA 	 0 
 LDV 

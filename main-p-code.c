@@ -294,6 +294,7 @@ INSTRUCTION PCODE[TAILLECODE];
 int LABEL_BRN;
 int INDICE_BZE;
 int IND_BZE;
+int INDICE_BRN;
 
 int PC = 0; // Compteur d'instructions
 
@@ -1253,13 +1254,13 @@ void SI()
     Test_Symbole(THEN_TOKEN, THEN_ERR);
     INST();
     GENERER1(BRN);
-    INDICE_BZE = PC;
+    INDICE_BRN = PC;
     PCODE[IND_BZE].SUITE = PC + 1;
     if (SYM_COUR.CODE == ELSE_TOKEN)
     {
     	Sym_Suiv();
         INST();
-        PCODE[INDICE_BZE].SUITE = PC + 1;
+        PCODE[INDICE_BRN].SUITE = PC + 1;
     }
 }
 
