@@ -1,6 +1,6 @@
 program test;
 var x;
 begin
-   for x:=5 downto 0 do
-	write(x);
+   x:=0;
+   repeat x:=x+1; until x=5
 end.

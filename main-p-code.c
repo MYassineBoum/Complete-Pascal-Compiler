@@ -935,7 +935,9 @@ void INTER_INST(INSTRUCTION INST)
         PC++;
         break;
     case INN:
-        scanf("%d", MEM[SP--]);
+    	scanf("%d", &val1);
+        adr = MEM[SP--];
+        MEM[adr] = val1;
         PC++;
         break;
     case BZE:
@@ -1604,9 +1606,16 @@ REPEAT_TOKEN,UNTIL_TOKEN,FOR_TOKEN,ELSE_TOKEN,CASE_TOKEN,OF_TOKEN*/
 void REPETER()
 {
     Test_Symbole(REPEAT_TOKEN, REPEAT_ERR);
+    LABEL_BRN = PC + 1;
     INST();
+    printf("%d\n", SYM_COUR.CODE);
     Test_Symbole(UNTIL_TOKEN, UNTIL_ERR);
     COND();
+    GENERER1(BZE);
+    INDICE_BZE = PC;
+    GENERER2(BRN, LABEL_BRN);
+    PCODE[INDICE_BZE].SUITE = PC + 1;
+    
 }
 
 void CAS()
