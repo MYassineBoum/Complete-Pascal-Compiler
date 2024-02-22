@@ -1,16 +1,15 @@
 program test;
 
 var
-  n: integer,
-  i: integer,
-  j: integer;
-
+  x: integer;
 begin
-  readln(n);
+  x:=0;
 
-  for i := 3 downto 0 do
-    begin j := i + 1;
-writeln(n+j);
-end
+  repeat
+    begin
+      x:=x+1;
+      write(x);
+    end
+  until x=5
 
 end.

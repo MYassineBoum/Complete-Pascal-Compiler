@@ -2037,7 +2037,7 @@ int main()
 {
     FILE *FICH_SORTIE;
     FICH_SORTIE = fopen("pcode.txt", "w");
-    fichier = fopen("tests/lasting.p", "r");
+    fichier = fopen("tests/advanced.p", "r");
     if (fichier == NULL)
     {
         perror("Erreur lors de l'ouverture du fichier!");
