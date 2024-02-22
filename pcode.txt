@@ -1,4 +1,4 @@
-INT 	 2 
+INT 	 10 
 LDA 	 0 
 LDI 	 10 
 STO 
@@ -9,21 +9,19 @@ LDA 	 2
 INN 
 LDA 	 3 
 INN 
+LDA 	 2 
+LDV 
+PRN 
+LDA 	 3 
+LDV 
+PRN 
 LDA 	 4 
-LDA 	 0 
-LDV 
-LDA 	 1 
-LDV 
-LDI 	 10 
-MUL 
-ADD 
-STO 
 LDA 	 2 
 LDV 
 LDA 	 3 
 LDV 
 ADD 
-PRN 
+STO 
 LDA 	 4 
 LDV 
 PRN 

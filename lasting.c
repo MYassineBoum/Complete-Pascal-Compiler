@@ -399,7 +399,6 @@ void SaveInstToFile(FILE *FICH_SORTIE, INSTRUCTION INST, int i);
 void INTER_PCODE();
 void INTER_INST(INSTRUCTION INST);
 void INTER_PCODE();
-void INTER_INST(INSTRUCTION INST);
 
 // Definition des fonctions � utiliser
 
@@ -1240,14 +1239,14 @@ void INTER_INST(INSTRUCTION INST)
         break;
     }
 
-    //    printf("%d\n", INST.MNE);
-    //    int i;
-    //    for (i = 0; i < SP; i++)
-    //    {
-    //         printf("%d\n", MEM[i]);
-    //    }
-    //
-    //    printf("\n\n");
+    
+    // int i;
+    // for (i = 0; i < SP; i++)
+    // {
+    //     printf("[%d | ", MEM[i]);
+    // }
+
+    // printf("\n\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1296,8 +1295,7 @@ void BLOCK()
     VARS();
     current_region = RBEGIN;
     PCODE[0].MNE = INT;
-    PCODE[0].SUITE = 2;
-
+    PCODE[0].SUITE = 10;
     INSTS();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2013,7 +2011,7 @@ int main()
 {
     FILE *FICH_SORTIE;
     FICH_SORTIE = fopen("pcode.txt", "w");
-    fichier = fopen("tests/test12.p", "r");
+    fichier = fopen("tests/test13.p", "r");
     if (fichier == NULL)
     {
         perror("Erreur lors de l'ouverture du fichier!");
