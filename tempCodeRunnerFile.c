@@ -1,1 +1,1 @@
-writeln
+VARS
