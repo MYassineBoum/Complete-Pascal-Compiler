@@ -1,7 +1,10 @@
 program test;
-var x;
+const tata:integer=10; titi:integer=5;
+var x:integer,y:integer,z:integer;
 begin
-   x:=0;
-   repeat x:=x+1 until x=5;
-   write(x);
+read(x,y);
+write(x);
+write(y);
+z:=x+y;
+write(z)
 end.

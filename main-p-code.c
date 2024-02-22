@@ -37,7 +37,6 @@ typedef enum
     PO_TOKEN,
     PF_TOKEN,
     FIN_TOKEN,
-    NUM_TOKEN,
     ERREUR_TOKEN,
     EOF_TOKEN,
     EG_TOKEN,
@@ -49,7 +48,18 @@ typedef enum
     OF_TOKEN,
     INTO_TOKEN,
     DOWNTO_TOKEN,
-    DDOT_TOKEN
+    DDOT_TOKEN,
+    INTEGER_TOKEN,
+    FLOAT_TOKEN,
+    BOOLEAN_TOKEN,
+    STRING_TOKEN,
+    ARRAY_TOKEN,
+    INTEGER_DATA_TOKEN,
+    FLOAT_DATA_TOKEN,
+    BOOLEAN_DATA_TOKEN,
+    STRING_DATA_TOKEN,
+    ARRAY_DATA_TOKEN,
+    ERROR_TOKEN,
 } CODES_LEX;
 
 // erreur types
@@ -83,7 +93,6 @@ typedef enum
     PO_ERR,
     PF_ERR,
     FIN_ERR,
-    NUM_ERR,
     ERREUR_ERR,
     EOF_ERR,
     EG_ERR,
@@ -98,10 +107,22 @@ typedef enum
     INTO_ERR,
     DOWNTO_ERR,
     DDOT_ERR,
-    INST_PCODE_ERR
+    INST_PCODE_ERR,
+    INTEGER_ERR,
+    FLOAT_ERR,
+    BOOLEAN_ERR,
+    STRING_ERR,
+    ARRAY_ERR,
+    INTEGER_DATA_ERR,
+    FLOAT_DATA_ERR,
+    BOOLEAN_DATA_ERR,
+    STRING_DATA_ERR,
+    ARRAY_DATA_ERR
 } CODES_ERR;
 
 int LOOP_LOGIC = 0;
+
+void TYPE(int isIntitlized);
 
 const char *getErrorMessage(CODES_ERR error_code);
 
@@ -165,8 +186,16 @@ const char *getErrorMessage(CODES_ERR error_code)
         return "Closing parenthesis error";
     case FIN_ERR:
         return "End of file error";
-    case NUM_ERR:
-        return "Number format error";
+    case INTEGER_DATA_ERR:
+        return "Integer format error";
+    case FLOAT_DATA_ERR:
+        return "Float format error";
+    case BOOLEAN_DATA_ERR:
+        return "Boolean format error";
+    case STRING_DATA_ERR:
+        return "String format error";
+    case ARRAY_DATA_ERR:
+        return "Array format error";
     case ERREUR_ERR:
         return "General error";
     case EOF_ERR:
@@ -177,6 +206,16 @@ const char *getErrorMessage(CODES_ERR error_code)
         return "Constant/Variable/Begin declaration error";
     case VAR_BEGIN_ERR:
         return "Variable/Begin declaration error";
+    case INTEGER_ERR:
+        return "Integer error";
+    case FLOAT_ERR:
+        return "Float error";
+    case BOOLEAN_ERR:
+        return "Boolean error";
+    case STRING_ERR:
+        return "String error";
+    case ARRAY_ERR:
+        return "Array error";
     case REPEAT_ERR:
         return "Repeat error";
     case UNTIL_ERR:
@@ -448,6 +487,36 @@ void lire_mot()
     {
         SYM_COUR.CODE = DOWNTO_TOKEN;
     }
+    else if (stricmp(mot, "integer") == 0)
+    {
+        SYM_COUR.CODE = INTEGER_TOKEN;
+    }
+    else if (stricmp(mot, "float") == 0)
+    {
+        SYM_COUR.CODE = FLOAT_TOKEN; // 1
+    }
+    else if (stricmp(mot, "boolean") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_TOKEN; // 2
+    }
+    else if (stricmp(mot, "string") == 0)
+    {
+        SYM_COUR.CODE = STRING_TOKEN; // 3
+    }
+    else if (stricmp(mot, "array") == 0)
+    {
+        SYM_COUR.CODE = ARRAY_TOKEN; // 4
+    }
+    else if (stricmp(mot, "true") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_DATA_TOKEN;
+        SYM_COUR.val = 1;
+    }
+    else if (stricmp(mot, "false") == 0)
+    {
+        SYM_COUR.CODE = BOOLEAN_DATA_TOKEN;
+        SYM_COUR.val = 0;
+    }
     else
     {
         // Si ce n'est pas un mot-cl?, c'est un identifiant
@@ -470,27 +539,108 @@ void lire_mot()
 
 void lire_nombre()
 {
-    char nombre[11];
+    char nombre[32];
     int indice = 0;
+    int isFloat = 0; // Variable pour indiquer si le nombre est un flottant
 
     // Lecture du premier chiffre
     nombre[indice++] = Car_Cour;
     Lire_Car();
 
     // Lecture des chiffres suivants
-    while (isdigit(Car_Cour))
+    while (isdigit(Car_Cour) || Car_Cour == '.')
     {
+        if (Car_Cour == '.')
+        {
+            isFloat = 1; // Le nombre contient un point, donc c'est un flottant
+        }
         nombre[indice++] = Car_Cour;
         Lire_Car();
     }
 
-    // Ajout du caract?re de fin de cha?ne
+    // Ajout du caractère de fin de chaîne
     nombre[indice] = '\0';
 
     // Stockage du nombre dans le jeton
-    SYM_COUR.CODE = NUM_TOKEN;
+    if (isFloat)
+    {
+        SYM_COUR.CODE = FLOAT_DATA_TOKEN;
+        SYM_COUR.val = atof(nombre);
+    }
+    else
+    {
+        SYM_COUR.CODE = INTEGER_DATA_TOKEN;
+        SYM_COUR.val = atoi(nombre);
+    }
+
     strcpy(SYM_COUR.NOM, nombre);
-    SYM_COUR.val = atoi(SYM_COUR.NOM);
+}
+
+void TYPE(int isIntitlized)
+{
+    Test_Symbole(DDOT_TOKEN, DDOT_ERR);
+    switch (SYM_COUR.CODE)
+    {
+    case FLOAT_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            // Empiler la valeur lue (correspond a NUM_TOKEN)
+            GENERER2(LDI, SYM_COUR.val);
+            GENERER1(STO);
+
+            IND_DER_SYM_ACC++;
+
+            Test_Symbole(FLOAT_DATA_TOKEN, FLOAT_DATA_ERR);
+
+            Test_Symbole(PV_TOKEN, PV_ERR);
+        }
+        break;
+    case INTEGER_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(EG_TOKEN, EG_ERR);
+
+            // Empiler la valeur lue (correspond a NUM_TOKEN)
+            GENERER2(LDI, SYM_COUR.val);
+            GENERER1(STO);
+
+            IND_DER_SYM_ACC++;
+
+            Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
+
+            Test_Symbole(PV_TOKEN, PV_ERR);
+        }
+        break;
+    case BOOLEAN_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(BOOLEAN_DATA_TOKEN, BOOLEAN_DATA_ERR);
+        }
+        break;
+    case STRING_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(STRING_DATA_TOKEN, STRING_DATA_ERR);
+        }
+        break;
+    case ARRAY_TOKEN:
+        Sym_Suiv();
+        if (isIntitlized)
+        {
+            Test_Symbole(ARRAY_DATA_TOKEN, ARRAY_DATA_ERR);
+        }
+        break;
+
+    default:
+        Erreur(VAR_BEGIN_ERR, "VARS");
+        break;
+    }
 }
 
 void Check()
@@ -1044,7 +1194,7 @@ void BLOCK()
     VARS();
     current_region = RBEGIN;
     PCODE[0].MNE = INT;
-    PCODE[0].SUITE = 2;
+    PCODE[0].SUITE = -1;
 
     INSTS();
 }
@@ -1064,17 +1214,7 @@ void CONSTS()
         GENERER2(LDA, TABLESYM[IND_DER_SYM_ACC].ADRESSE);
 
         Test_Symbole(ID_TOKEN, ID_ERR);
-        Test_Symbole(EG_TOKEN, EG_ERR);
-
-        // Empiler la valeur lue (correspond a NUM_TOKEN)
-        GENERER2(LDI, SYM_COUR.val);
-        GENERER1(STO);
-
-        Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-        IND_DER_SYM_ACC++;
-
-        Test_Symbole(PV_TOKEN, PV_ERR);
+        TYPE(1);
         while (SYM_COUR.CODE == ID_TOKEN)
         {
             // Definir une nouvelle constante en memoire
@@ -1085,17 +1225,7 @@ void CONSTS()
 
             Sym_Suiv();
 
-            Test_Symbole(EG_TOKEN, EG_ERR);
-
-            // Empiler la valeur lue (correspon a NUM_TOKEN)
-            GENERER2(LDI, SYM_COUR.val);
-            GENERER1(STO);
-
-            Test_Symbole(NUM_TOKEN, NUM_ERR);
-
-            IND_DER_SYM_ACC++;
-
-            Test_Symbole(PV_TOKEN, PV_ERR);
+            TYPE(1);
         };
         break;
     case VAR_TOKEN:
@@ -1138,11 +1268,13 @@ void VARS()
     case VAR_TOKEN:
         Sym_Suiv();
         Test_Symbole(ID_TOKEN, ID_ERR);
+        TYPE(0);
 
         while (SYM_COUR.CODE == VIR_TOKEN)
         {
             Sym_Suiv();
             Test_Symbole(ID_TOKEN, ID_ERR);
+            TYPE(0);
         }
 
         Test_Symbole(PV_TOKEN, PV_ERR);
@@ -1240,10 +1372,9 @@ void AFFEC()
         }
     }
 
-
     if (!exists)
     {
-        
+
         // D?finir une nouvelle variable en m?moire
         strcpy(TABLESYM[IND_DER_SYM_ACC].NOM, SYM_COUR.NOM);
         TABLESYM[IND_DER_SYM_ACC].CLASSE = ID_TOKEN;
@@ -1534,7 +1665,7 @@ void FACT()
                 // Remplace cette adresse par sa valeur
                 GENERER1(LDV);
 
-               // printf("ID: %s\n", SYM_COUR.NOM);
+                // printf("ID: %s\n", SYM_COUR.NOM);
                 break;
             }
         }
@@ -1542,11 +1673,11 @@ void FACT()
         Test_Symbole(ID_TOKEN, ID_ERR);
 
         break;
-    case NUM_TOKEN:
+    case INTEGER_DATA_TOKEN:
         // Empiler la valeur trouv?e
         GENERER2(LDI, SYM_COUR.val);
 
-        Test_Symbole(NUM_TOKEN, NUM_ERR);
+        Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
         break;
     case PO_TOKEN:
         Test_Symbole(PO_TOKEN, PO_ERR);
@@ -1657,7 +1788,7 @@ void POUR()
     GENERER2(LDI, SYM_COUR.val);
     GENERER1(STO);
 
-    Test_Symbole(NUM_ERR, NUM_ERR);
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
 
     switch (SYM_COUR.CODE)
     {
@@ -1691,7 +1822,7 @@ void POUR()
     }
     GENERER1(NEQ);
 
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
 
     GENERER1(BZE);
     INDICE_BZE = PC;
@@ -1746,10 +1877,10 @@ void CAS()
     Test_Symbole(CASE_TOKEN, CASE_ERR);
     Test_Symbole(ID_TOKEN, ID_ERR);
     Test_Symbole(OF_TOKEN, OF_TOKEN);
-    Test_Symbole(NUM_TOKEN, NUM_ERR);
+    Test_Symbole(INTEGER_DATA_TOKEN, INTEGER_DATA_ERR);
     Test_Symbole(DDOT_TOKEN, DDOT_ERR);
     INST();
-    while (SYM_COUR.CODE == NUM_TOKEN)
+    while (SYM_COUR.CODE == INTEGER_DATA_TOKEN)
     {
         Sym_Suiv();
         Test_Symbole(DDOT_TOKEN, DDOT_ERR);
