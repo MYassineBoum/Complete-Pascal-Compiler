@@ -1,6 +1,10 @@
 program test;
-var x;
+const tata:integer=10; titi:integer=5;
+var x:integer,y:integer,z:integer;
 begin
-   for x:=5 downto 0 do
-	write(x);
+read(x,y);
+write(x);
+writeln(y);
+z:=x+y;
+write(z);
 end.
