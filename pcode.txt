@@ -1,4 +1,4 @@
-INT 	 -1 
+INT 	 5 
 LDA 	 0 
 LDI 	 10 
 STO 

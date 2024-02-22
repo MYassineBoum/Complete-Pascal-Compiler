@@ -4,7 +4,7 @@ var x:integer,y:integer,z:integer;
 begin
 read(x,y);
 write(x);
-write(y);
+writeln(y);
 z:=x+y;
-write(z)
+write(z);
 end.
