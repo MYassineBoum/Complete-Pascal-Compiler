@@ -9,18 +9,12 @@ LDA 	 2
 INN 
 LDA 	 3 
 INN 
-LDA 	 2 
-LDV 
-PRN 
-LDA 	 3 
-LDV 
-PRN 
 LDA 	 4 
 LDA 	 2 
 LDV 
 LDA 	 3 
 LDV 
-ADD 
+MUL 
 STO 
 LDA 	 4 
 LDV 
